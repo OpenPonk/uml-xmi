@@ -1,0 +1,32 @@
+language: smalltalk
+sudo: false
+
+os:
+  - linux
+
+smalltalk:
+  - Pharo-6.0
+
+cache:
+  directories:
+    $HOME/package-cache
+
+before_script:
+  - wget -O- https://raw.githubusercontent.com/peteruhnak/hapao-coverage/master/package-cache.sh | bash
+
+after_success:
+  - wget -O- https://raw.githubusercontent.com/peteruhnak/hapao-coverage/master/hapao-coverage.sh | bash
+
+deploy:
+  provider: s3
+  access_key_id:
+    secure: "dd2/2vEXrv38ePaT4dkS9NfezKbzwXU6J014sCD/kX3w42FOKnFzHgXxqCeBWdEVlrt6/numQY1gMfUsciZQHlgeWUZ3/18PEbOmWdOR4rKXhqGoY4hAYYcOBJEw8H+wz5hCQ26dd9vgHwVZceNB35teupDuQjvoA5aU4lmmWH2iIzc905RhazdNZUqXrvsPCTj3cRxxHQ9S+aHlrWxhxB/KmG2LraOo0spr39rEnraLpqfkrjKYVli61QSPmbZkBlB5gG0zL7eBh+zkxSQqA9yBZ+wI4BcSmJd2CDTUVppMFApK+6Q15EGPfFoXC3ARf+uJe9XPz+tfz4mUDcpFvzny64FJ8v7t2Kcymg0Cg3MZro7PoME29xiuTfu9x3I5SUAsugGs9uY4hE1TFI6T3b1hp0M881/+zFCvo+05s8telJ5VlVkeUlwmvB4KAggCRrpxqrAYNecpYPzZHABHOEQNlZLHt2KyKF6NJVVvT7HwhRTvQLe10NEpBJqFRwRaLYl7re1uFTBPr8JeAOYMYTCQa9qOnKRXUMJgbNHsPdgPu7IG15t88OIB8/mk3x/o0k/MgUS3CNgmwCWcmZyWSYRtrQfz/QJOelaXRE3Xy/p+eLMRxnEqSg4RJkW65bRwUwDme4FZISbCniQ1mGhLMXY/m0D1p2b1wzA9OhF5ZC0="
+  secret_access_key:
+    secure: "bCYRAaCrgq7Dim2GcomCtAZOIaljOnhybzcKyDKLYMNNHmyxHUsPZdMQcFtTL47vp1WSyk62+F42aM308BSFxwm4mnxtBfPOPtVOgf9xCCYPzhyySxccyVfkBhS2vZ3deQ4InwrhfW1A27ypybt0wI4sDCqKySAGwCLzeJFXY5q6coL5RMwdnjOi/O74yMmT2p0oaefUg2QJnG5Cw9lh9TqVHsXUJj3H3pxTWJT0IYqTqWB31biPOnnbnYe5mWlpbBtdXGGHW+CafnbtDgjVf4AqYCTKb7xFm90cYU/BSHRlQH/4DVNMUtKQEB4sPFWvxeX035X7MMujSGo3D6kO+TxBOjUkyjOT7IlKAfxyfUG19UPJI03bywqpZ5rkNarsLoMCVRf1iFOUPpg/UuRLhDpw6z7FCatmpV+5VrZRNFDsKxXhXNHHUmIFR9Qc27XtuansLb932wxOKwmwiQiEQLEZ8DLPTC4osE9mWsbX8dbtqZhir+zNoRMU5hwIq+054S/KhtHyx6OpZUulSsDy8KzAYZQFAn+72+6dUO0+5h7YbCYQGVd3DUMSHXfIAgpmqKp5jVCaXt2FpZx/DoF+DSROiNSS0x6Pf2vvRUHLLi4erYmDM1DBBqPnVBq1YQgPSwHRd+p0aHSBDBN+NWnDOY0DJsW2Fwqmd/tbt5LYmss="
+  bucket: 'gh-coverage-peteruhnak-com'
+  region: eu-central-1
+  local_dir: coverage-result
+  upload-dir: $TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER
+  skip-cleanup: true
+  on:
+    branch: master

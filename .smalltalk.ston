@@ -1,0 +1,15 @@
+SmalltalkCISpec {
+	#loading : [
+		SCIMetacelloLoadSpec {
+			#baseline : 'OPUMLXMI',
+			#directory : 'repository',
+			#platforms : [ #pharo ]
+		}
+	],
+	#testing : {
+		#packages : [ 'OP-UML-XMI' ],
+		#coverage : {
+			#packages : [ 'OP-UML-XMI' ]
+		}
+	}
+}
