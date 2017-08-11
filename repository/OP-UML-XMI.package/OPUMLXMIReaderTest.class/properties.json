@@ -1,0 +1,13 @@
+{
+	"commentStamp" : "",
+	"super" : "TestCase",
+	"category" : "OP-UML-XMI-Tests",
+	"classinstvars" : [ ],
+	"pools" : [ ],
+	"classvars" : [ ],
+	"instvars" : [
+		"reader"
+	],
+	"name" : "OPUMLXMIReaderTest",
+	"type" : "normal"
+}

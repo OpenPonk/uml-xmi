@@ -1,0 +1,17 @@
+{
+	"commentStamp" : "",
+	"super" : "Object",
+	"category" : "OP-UML-XMI-Utility",
+	"classinstvars" : [ ],
+	"pools" : [ ],
+	"classvars" : [
+		"Current",
+		"MetaClassMap",
+		"UmlMetaModel"
+	],
+	"instvars" : [
+		"storage"
+	],
+	"name" : "OPUMLXMISpecsStorage",
+	"type" : "normal"
+}

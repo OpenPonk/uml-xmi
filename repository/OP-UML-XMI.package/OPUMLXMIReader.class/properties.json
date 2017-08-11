@@ -1,0 +1,14 @@
+{
+	"commentStamp" : "",
+	"super" : "Object",
+	"category" : "OP-UML-XMI-Reader",
+	"classinstvars" : [ ],
+	"pools" : [ ],
+	"classvars" : [ ],
+	"instvars" : [
+		"classPrefix",
+		"instanceCache"
+	],
+	"name" : "OPUMLXMIReader",
+	"type" : "normal"
+}

@@ -1,0 +1,15 @@
+{
+	"commentStamp" : "",
+	"super" : "Object",
+	"category" : "OP-UML-XMI-Writer",
+	"classinstvars" : [ ],
+	"pools" : [ ],
+	"classvars" : [ ],
+	"instvars" : [
+		"classPrefix",
+		"identityCache",
+		"unresolved"
+	],
+	"name" : "OPUMLXMIWriter",
+	"type" : "normal"
+}
