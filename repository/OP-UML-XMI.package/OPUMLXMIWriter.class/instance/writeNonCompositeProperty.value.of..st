@@ -6,8 +6,15 @@ writeNonCompositeProperty: aProperty value: aValue of: anElement
 	values := aProperty isMultivalued
 		ifTrue: [ values := aValue asArray ]
 		ifFalse: [ values := {aValue} ].
-	referenceItem := OPXMIReferenceAttribute xmiName: aProperty name referencedElements: {}.
-	unresolved
-		add:
-			[ referenceItem referencedElements: (values collect: [ :each | self referenceFor: each ]) ].
-	^ {referenceItem}
+	(values anyOne isKindOf: OPUMLPrimitiveType)
+		ifTrue: [ ^ values
+				collect: [ :each | 
+					(OPXMIReferenceElement xmiName: aProperty name referencedElements: {})
+						xmiType: 'uml:PrimitiveType';
+						href: self umlUri , '#' , each name ] ]
+		ifFalse:
+			[ referenceItem := OPXMIReferenceAttribute xmiName: aProperty name referencedElements: {}.
+			unresolved
+				add:
+					[ referenceItem referencedElements: (values collect: [ :each | self referenceFor: each ]) ].
+			^ {referenceItem} ]

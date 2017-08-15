@@ -29,5 +29,7 @@ readItem: anItem
 			isMultivalued
 				ifTrue: [ instance perform: selector with: arguments ]
 				ifFalse: [ self assert: [ values size = 1 ].
-					instance perform: selector with: arguments first ] ].
+					self flag: 'Because unresolved references...'.
+					arguments size > 0
+						ifTrue: [ instance perform: selector with: arguments first ] ] ].
 	^ instance

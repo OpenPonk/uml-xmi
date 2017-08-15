@@ -1,5 +1,8 @@
 accessing
 metaClassFor: anElement
+	"
+	MetaClassMap := nil
+	"
 	MetaClassMap
 		ifNil: [ MetaClassMap := ((self umlMetamodel packagedElements flatCollect: #packagedElements)
 				select: [ :each | each umlClassName = #Class ]
