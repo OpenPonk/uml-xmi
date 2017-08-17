@@ -8,7 +8,9 @@
 	"instvars" : [
 		"classPrefix",
 		"identityCache",
-		"unresolved"
+		"unresolved",
+		"metamodelPackagedElements",
+		"umlMetamodel"
 	],
 	"name" : "OPUMLXMIWriter",
 	"type" : "normal"

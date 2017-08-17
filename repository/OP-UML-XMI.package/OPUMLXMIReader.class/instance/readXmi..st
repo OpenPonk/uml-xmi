@@ -4,5 +4,5 @@ readXmi: anXmi
 		select: [ :each | 
 			each isObjectElement
 				and: [ (each xmiType isNotNil and: [ each xmiType beginsWith: 'uml:' ])
-						and: [ each xmiName = 'Model' | (each xmiName = 'Package') ] ] ]
+						and: [ #(Model Package Profile) includes: each xmiName ] ] ]
 		thenCollect: [ :each | self readItem: each ]
