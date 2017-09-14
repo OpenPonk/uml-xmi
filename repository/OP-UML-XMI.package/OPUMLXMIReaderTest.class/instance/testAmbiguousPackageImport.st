@@ -3,7 +3,7 @@ testAmbiguousPackageImport
 	"xmi:id of <packageImport> elements are not valid and should be ignored (they are not unique). Test that we can load correctly despite that"
 
 	| masterPkg activitiesPkg classificationPkg |
-	masterPkg := reader readItem: self packageImportPackage.
+	masterPkg := reader readItem: self packageImportPackage property: packagedElementProperty.
 	self assert: masterPkg name equals: 'UML'.
 	self assert: masterPkg packageImports size equals: 2.
 	activitiesPkg := masterPkg packageImports first importedPackage.

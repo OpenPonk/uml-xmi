@@ -1,8 +1,9 @@
 reading
 readXmi: anXmi
+	"
+	anXmi containedItems collect: [ :each | self readItem: each property: nil ]
+	"
+
 	^ anXmi containedItems
-		select: [ :each | 
-			each isObjectElement
-				and: [ (each xmiType isNotNil and: [ each xmiType beginsWith: 'uml:' ])
-						and: [ #(Model Package Profile) includes: each xmiName ] ] ]
-		thenCollect: [ :each | self readItem: each ]
+		select: [ :each | each isObjectElement and: [ #(Model Package Profile) includes: each xmiName ] ]
+		thenCollect: [ :each | self readItem: each property: nil ]

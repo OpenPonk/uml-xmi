@@ -6,7 +6,8 @@
 	"pools" : [ ],
 	"classvars" : [ ],
 	"instvars" : [
-		"reader"
+		"reader",
+		"packagedElementProperty"
 	],
 	"name" : "OPUMLXMIReaderTest",
 	"type" : "normal"

@@ -1,3 +1,5 @@
 running
 setUp
-	reader := OPUMLXMIReader new
+	reader := OPUMLXMIReader new.
+	packagedElementProperty := (OPUMLXMISpecsStorage metaClassFor: OPUMLPackage new)
+		ownedAttributes detect: [ :each | each name = 'packagedElement' ]

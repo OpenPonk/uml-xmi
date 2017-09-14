@@ -1,16 +1,18 @@
 reading
-readItem: anItem
+readItem: anItem property: aProperty
 	| instance groups |
 	anItem isValueItem
 		ifTrue: [ ^ self valueFor: anItem value ].
 	anItem isReferenceItem
-		ifTrue: [ ^ anItem referencedElements collect: [ :each | self readItem: each ] ].
+		ifTrue: [ ^ anItem referencedElements
+				collect: [ :each | self readItem: each property: aProperty ] ].
 	instanceCache at: (self uniqueIdOf: anItem) ifPresent: [ :match | ^ match ].
-	instance := self instanceFor: anItem.
+	instance := self instanceFor: anItem property: aProperty.
 	groups := self groupedChildrenIn: anItem.
 	groups
 		keysAndValuesDo: [ :key :values | 
-			| selector arguments pluralSelector sg pl isMultivalued |
+			| selector arguments pluralSelector sg pl isMultivalued property |
+			property := (instance umlMetaClass allAttributes select: [ :each | each name = key ]) last.
 			selector := (key , ':') asSymbol.
 			pluralSelector := ((self asPlural: key) , ':') asSymbol.
 			sg := (instance class selectors includes: selector)
@@ -23,7 +25,7 @@ readItem: anItem
 			isMultivalued
 				ifTrue: [ selector := pluralSelector ].
 			self assert: [ sg | pl ].
-			arguments := values collect: [ :each | self readItem: each ].
+			arguments := values collect: [ :each | self readItem: each property: property ].
 			(arguments anyOne isArray or: [ arguments anyOne isKindOf: OrderedCollection ])
 				ifTrue: [ arguments := arguments gather: #yourself ].
 			isMultivalued

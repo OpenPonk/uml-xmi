@@ -1,5 +1,3 @@
-accessing
+instance creation
 instanceFor: anObjectElement
-	^ instanceCache
-		at: (self uniqueIdOf: anObjectElement)
-		ifAbsentPut: [ self createNewInstanceFor: anObjectElement xmiType ]
+	^ instanceCache at: (self uniqueIdOf: anObjectElement)

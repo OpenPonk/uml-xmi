@@ -2,10 +2,9 @@ tests
 testInstance
 	| element result1 result2 |
 	element := OPXMIObjectElement new
-		containedItems:
-			{OPXMIValueElement xmiName: 'xmi:id' value: 'CLS'.
-			OPXMIValueElement xmiName: 'xmi:type' value: 'uml:Package'}.
-	result1 := reader instanceFor: element.
+		xmiName: 'Package';
+		containedItems: {OPXMIValueElement xmiName: 'xmi:id' value: 'CLS'}.
+	result1 := reader instanceFor: element property: nil.
 	self assert: result1 umlClassName equals: #Package.
-	result2 := reader instanceFor: element.
+	result2 := reader instanceFor: element property: nil.
 	self assert: result1 == result2 description: 'We expect the same object.'
