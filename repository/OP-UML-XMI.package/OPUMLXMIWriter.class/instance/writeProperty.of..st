@@ -8,8 +8,9 @@ writeProperty: aProperty of: anElement
 	(value isNil or: [ value isCollection and: [ value isEmpty ] ])
 		ifTrue: [ ^ #() ].
 	(aProperty type oclIsKindOf: #PrimitiveType)
-		| (aProperty type oclIsKindOf: #Enumeration)
 		ifTrue: [ ^ self writePrimitiveProperty: aProperty value: value of: anElement ].
+	(aProperty type oclIsKindOf: #Enumeration)
+		ifTrue: [ ^ self writeEnumerationProperty: aProperty value: value of: anElement ].
 	(aProperty name = #type and: [ anElement oclIsKindOf: #Property ])
 		ifTrue: [ ^ self writeTypeProperty: aProperty value: value of: anElement ].
 	^ aProperty isComposite

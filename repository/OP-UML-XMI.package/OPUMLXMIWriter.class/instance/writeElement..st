@@ -7,10 +7,11 @@ writeElement: anElement
 	identityCache at: anElement put: element.
 	element xmiName: 'to-be-specified'.
 	containedItems
-		add: (OPXMIValueAttribute xmiName: 'xmi:type' value: 'uml:' , anElement umlMetaClass name).
+		add:
+			(OPXMIValueAttribute xmiName: 'xmi:type' value: 'uml:' , anElement umlMetaClass name).
 	containedItems
 		add: (OPXMIValueAttribute xmiName: 'xmi:id' value: (self idFor: anElement)).
-	properties := anElement umlMetaClass allAttributes.
+	properties := self propertiesOf: anElement.
 	properties := (properties collect: [ :each | each name -> each ]) asOrderedDictionary
 		values.
 	properties
