@@ -7,6 +7,10 @@ os:
 smalltalk:
   - Pharo-6.0
 
+smalltalk_edge:
+  source: peteruhnak/smalltalkCI
+  branch: s3-source
+
 cache:
   directories:
     $HOME/package-cache
