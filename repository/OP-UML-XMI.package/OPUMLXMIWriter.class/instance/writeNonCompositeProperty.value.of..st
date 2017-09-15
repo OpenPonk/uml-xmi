@@ -11,10 +11,18 @@ writeNonCompositeProperty: aProperty value: aValue of: anElement
 				collect: [ :each | 
 					(OPXMIReferenceElement xmiName: aProperty name referencedElements: {})
 						xmiType: 'uml:PrimitiveType';
-						href: self umlUri , '#' , each name ] ]
-		ifFalse:
-			[ referenceItem := OPXMIReferenceAttribute xmiName: aProperty name referencedElements: {}.
+						href: self umlUri , '#' , each name ] ].
+	(#(importedPackage) includes: aProperty name)
+		ifTrue: [ referenceItem := OPXMIReferenceElement xmiName: aProperty name referencedElements: {}.
 			unresolved
-				add:
-					[ referenceItem referencedElements: (values collect: [ :each | self referenceFor: each ]) ].
-			^ {referenceItem} ]
+				add: [ self assert: [ aProperty isMultivalued not ].
+					identityCache
+						at: values anyOne
+						ifPresent: [ :ref | referenceItem referencedElements: {ref} ]
+						ifAbsent: [ referenceItem href: values anyOne URI , '#_0' ] ].
+			^ {referenceItem} ].
+	referenceItem := OPXMIReferenceAttribute xmiName: aProperty name referencedElements: {}.
+	unresolved
+		add:
+			[ referenceItem referencedElements: (values collect: [ :each | self referenceFor: each ]) ].
+	^ {referenceItem}
