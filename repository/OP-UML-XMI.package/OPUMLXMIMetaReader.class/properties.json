@@ -1,0 +1,11 @@
+{
+	"commentStamp" : "",
+	"super" : "OPUMLXMIReader",
+	"category" : "OP-UML-XMI-Reader",
+	"classinstvars" : [ ],
+	"pools" : [ ],
+	"classvars" : [ ],
+	"instvars" : [ ],
+	"name" : "OPUMLXMIMetaReader",
+	"type" : "normal"
+}
