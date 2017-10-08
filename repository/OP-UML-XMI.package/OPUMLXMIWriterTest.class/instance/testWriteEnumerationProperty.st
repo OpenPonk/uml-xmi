@@ -1,4 +1,4 @@
-instance creation
+tests
 testWriteEnumerationProperty
 	| element property result |
 	element := OPUMLPackageableElement new.

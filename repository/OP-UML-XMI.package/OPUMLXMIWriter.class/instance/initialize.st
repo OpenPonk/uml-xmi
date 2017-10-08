@@ -1,6 +1,7 @@
 initialization
 initialize
 	super initialize.
+	unresolved := OrderedCollection new.
 	identityCache := Dictionary new.
 	classPrefix := self defaultClassPrefix.
 	umlMetamodel := OPUMLXMISpecsStorage umlMetamodel.

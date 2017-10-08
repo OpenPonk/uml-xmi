@@ -12,14 +12,14 @@ writeNonCompositeProperty: aProperty value: aValue of: anElement
 					(OPXMIReferenceElement xmiName: aProperty name referencedElements: {})
 						xmiType: 'uml:PrimitiveType';
 						href: self umlUri , '#' , each name ] ].
-	(#(importedPackage) includes: aProperty name)
+	(#(importedPackage appliedProfile) includes: aProperty name)
 		ifTrue: [ referenceItem := OPXMIReferenceElement xmiName: aProperty name referencedElements: {}.
 			unresolved
 				add: [ self assert: [ aProperty isMultivalued not ].
 					identityCache
 						at: values anyOne
 						ifPresent: [ :ref | referenceItem referencedElements: {ref} ]
-						ifAbsent: [ referenceItem href: values anyOne URI , '#_0' ] ].
+						ifAbsent: [ referenceItem href: values anyOne URI , '#' , values anyOne uuid ] ].
 			^ {referenceItem} ].
 	referenceItem := OPXMIReferenceAttribute xmiName: aProperty name referencedElements: {}.
 	unresolved

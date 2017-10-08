@@ -12,5 +12,5 @@ write: anElement
 			{OPXMIValueAttribute xmiName: 'xmlns:uml' value: 'http://www.omg.org/spec/UML/20110701'.
 			OPXMIValueAttribute xmiName: 'xmlns:xmi' value: 'http://www.omg.org/spec/XMI/20110701'}
 				, {rootElement} , {}.
-	unresolved do: #value.
+	self resolveReferences.
 	^ document
