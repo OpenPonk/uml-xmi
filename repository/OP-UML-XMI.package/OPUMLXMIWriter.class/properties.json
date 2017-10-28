@@ -10,7 +10,8 @@
 		"identityCache",
 		"unresolved",
 		"metamodelPackagedElements",
-		"umlMetamodel"
+		"umlMetamodel",
+		"stereotypes"
 	],
 	"name" : "OPUMLXMIWriter",
 	"type" : "normal"

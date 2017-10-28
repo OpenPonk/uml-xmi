@@ -1,6 +1,7 @@
 writing
 writeElement: anElement
 	| element containedItems properties |
+	self processStereotypesIn: anElement.
 	element := OPXMIObjectElement new.
 	containedItems := OrderedCollection new.
 	element containedItems: containedItems.
