@@ -1,15 +1,14 @@
 writing
 processStereotype: aStereotype of: anElement
-	| element containedItems properties |
+	| element containedItems stereoMeta properties |
 	element := OPXMIObjectElement new.
 	containedItems := OrderedCollection new.
 	element containedItems: containedItems.
-	element xmiName: aStereotype profile name , ':' , aStereotype name.
+	stereoMeta := aStereotype umlMetaClass.
+	element xmiName: stereoMeta profile name , ':' , stereoMeta name.
 	containedItems
 		add: (OPXMIValueAttribute xmiName: 'xmi:id' value: (self idFor: aStereotype)).
-	properties := aStereotype ownedAttributes asArray.
-	properties := (properties collect: [ :each | each name -> each ]) asOrderedDictionary
-		values.
+	properties := stereoMeta ownedAttributes asArray.
 	properties
-		do: [ :each | containedItems addAll: (self writeStereotypeProperty: each of: aStereotype) ].
+		do: [ :each | containedItems addAll: (self writeProperty: each of: aStereotype) ].
 	stereotypes add: element
