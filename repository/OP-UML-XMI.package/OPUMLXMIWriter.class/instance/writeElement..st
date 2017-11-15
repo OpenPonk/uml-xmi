@@ -1,6 +1,8 @@
 writing
 writeElement: anElement
 	| element containedItems properties |
+	(self isMetaclass: anElement)
+		ifTrue: [ ^ #() ].
 	self processStereotypesIn: anElement.
 	element := OPXMIObjectElement new.
 	containedItems := OrderedCollection new.

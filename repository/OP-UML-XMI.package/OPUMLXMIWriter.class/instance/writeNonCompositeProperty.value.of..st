@@ -11,7 +11,7 @@ writeNonCompositeProperty: aProperty value: aValue of: anElement
 				collect: [ :each | 
 					(OPXMIReferenceElement xmiName: aProperty name referencedElements: {})
 						xmiType: 'uml:PrimitiveType';
-						href: self umlUri , '#' , each name ] ].
+						href: self primitiveTypesUri, '#', each name ] ].
 	(#(importedPackage appliedProfile) includes: aProperty name)
 		ifTrue: [ referenceItem := OPXMIReferenceElement xmiName: aProperty name referencedElements: {}.
 			unresolved

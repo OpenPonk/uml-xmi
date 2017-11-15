@@ -5,11 +5,5 @@ umlMetamodel
 	"
 
 	<script: 'self umlMetamodel inspect'>
+	UmlMetaModel ifNil: [ self loadMetamodel ].
 	^ UmlMetaModel
-		ifNil: [ | pathmap result |
-			pathmap := OPUMLXMIPathmap new.
-			pathmap add: 'http://www.omg.org/spec/UML/20131001/PrimitiveTypes.xmi'.
-			pathmap add: 'http://www.omg.org/spec/UML/20131001/UML.xmi'.
-			result := OPXMIReader readFromMapping: pathmap mapping.
-			UmlMetaModel := (OPUMLXMIMetaReader new
-				readXmi: (result at: 'http://www.omg.org/spec/UML/20131001/UML.xmi')) first ]

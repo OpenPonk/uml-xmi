@@ -1,4 +1,4 @@
 initialization
 initialize
 	super initialize.
-	mapping := Dictionary new
+	mapping := OrderedDictionary new

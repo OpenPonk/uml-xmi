@@ -9,3 +9,5 @@ createNewInstanceFor: anItem property: aProperty
 				ifNil: [ aProperty type name ]
 				ifNotNil: [ :type | (type splitOn: ':') last ] ].
 	^ (self classPrefix , name) asSymbol asClass new
+		uuid: anItem xmiId;
+		yourself
