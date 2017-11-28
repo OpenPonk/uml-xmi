@@ -11,7 +11,7 @@ writeProperty: aProperty of: anElement
 		ifTrue: [ ^ self writePrimitiveProperty: aProperty value: value of: anElement ].
 	(aProperty type oclIsKindOf: #Enumeration)
 		ifTrue: [ ^ self writeEnumerationProperty: aProperty value: value of: anElement ].
-	(aProperty name = #type and: [ anElement oclIsKindOf: #Property ])
+	(aProperty name = #type and: [ (anElement oclIsKindOf: #TypedElement) ])
 		ifTrue: [ ^ self writeTypeProperty: aProperty value: value of: anElement ].
 	aProperty isComposite
 		ifFalse: [ ^ self writeNonCompositeProperty: aProperty value: value of: anElement ].
