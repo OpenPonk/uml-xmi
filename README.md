@@ -42,5 +42,5 @@ model := OPUMLXMIReader readXmi: aXmlStringStream pathmap: pathmap.
 Writing a UML model into a XML string.
 
 ```smalltalk
-OPUMLXMLWriter toString: aUmlModel.
+OPUMLXMIWriter toString: aUmlModel.
 ```
