@@ -1,5 +1,7 @@
-tests
+tests - reading - value
 testBooleanValue
-	| result |
-	result := reader valueFor: 'true'.
+	| result booleanProperty |
+	booleanProperty := (OPUMLXMISpecsStorage metaClassFor: OPUMLProperty new) ownedAttributes
+		detect: [ :each | each name = 'isDerived' ].
+	result := reader valueFor: 'true' property: booleanProperty.
 	self assert: result equals: true
