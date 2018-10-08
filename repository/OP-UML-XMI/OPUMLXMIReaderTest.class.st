@@ -240,7 +240,11 @@ OPUMLXMIReaderTest >> testAssociation [
 	result := reader readItem: self association property: packagedElementProperty.
 	self assert: result umlClassName equals: #Association.
 	self assert: result memberEnds size equals: 2.
-	self assert: result memberEnds second equals: result ownedEnds first
+	self
+		assert: (result memberEnds collect: #name) asArray
+		equals: #('annotatedElement' 'comment').
+	self assert: (result ownedEnds collect: #name) asArray equals: #('comment').
+	self assert: (result memberEnds includes: result ownedEnds first)
 ]
 
 { #category : #'tests - reading - value' }
