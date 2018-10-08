@@ -241,8 +241,8 @@ OPUMLXMIReaderTest >> testAssociation [
 	self assert: result umlClassName equals: #Association.
 	self assert: result memberEnds size equals: 2.
 	self
-		assert: (result memberEnds collect: #name) asArray
-		equals: #('annotatedElement' 'comment').
+		assert: (result memberEnds collect: #name) asArray sorted
+		equals: #('annotatedElement' 'comment') sorted.
 	self assert: (result ownedEnds collect: #name) asArray equals: #('comment').
 	self assert: (result memberEnds includes: result ownedEnds first)
 ]
