@@ -1,3 +1,0 @@
-writing
-resolvedStereotypes
-	^ stereotypes
