@@ -12,7 +12,7 @@ BaselineOfOPUMLXMI >> baseline: spec [
 	<baseline>
 	spec
 		for: #common
-		do: [ spec baseline: 'OPXMI' with: [ spec repository: 'github://openponk/xmi:v1.x/repository' ].
+		do: [ spec baseline: 'OPXMI' with: [ spec repository: 'github://openponk/xmi/repository' ].
 			spec
 				baseline: 'UMLMetamodel'
 				with: [ spec repository: 'github://openponk/uml-metamodel:v1.x/repository' ].
