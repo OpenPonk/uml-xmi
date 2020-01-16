@@ -1,6 +1,6 @@
 # UML ↔ XMI Reader / Writer
 
-[![Build Status](https://travis-ci.org/OpenPonk/uml-xmi.svg?branch=master)](https://travis-ci.org/OpenPonk/uml-xmi) [![Coverage Status](https://coveralls.io/repos/github/OpenPonk/uml-xmi/badge.svg?branch=master)](https://coveralls.io/github/OpenPonk/uml-xmi?branch=master)
+[![Build Status](https://travis-ci.com/OpenPonk/uml-xmi.svg?branch=master)](https://travis-ci.com/OpenPonk/uml-xmi) [![Coverage Status](https://coveralls.io/repos/github/OpenPonk/uml-xmi/badge.svg?branch=master)](https://coveralls.io/github/OpenPonk/uml-xmi?branch=master)
 
 Library for reading XMI files into UML models and vice versa.
 
