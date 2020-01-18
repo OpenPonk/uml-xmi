@@ -5,7 +5,7 @@ Class {
 		'classPrefix',
 		'instanceCache'
 	],
-	#category : 'OP-UML-XMI-Reader'
+	#category : #'OP-UML-XMI-Reader'
 }
 
 { #category : #'instance creation' }
@@ -202,8 +202,12 @@ OPUMLXMIReader >> valueFor: anObject property: aProperty [
 	aProperty type name = 'String'
 		ifTrue: [ ^ anObject asString ].
 	aProperty type name = 'Boolean'
-		ifTrue: [ self assert: [ #('true' 'false') includes: anObject ] description: 'Unexpected type'.
+		ifTrue: [ self
+				assert: [ #('true' 'false') includes: anObject ]
+				description: 'Unexpected type'.
 			^ anObject = 'true' ].
+	(aProperty type oclIsKindOf: #Enumeration)
+		ifTrue: [ ^ anObject asSymbol ].
 	self error: 'Guessed type.'.
 	(NumberParser isNumber: anObject)
 		ifTrue: [ ^ Number readFromString: anObject ].
