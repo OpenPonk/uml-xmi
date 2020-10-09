@@ -4,7 +4,7 @@ Baseline for https://github.com/OpenPonk/uml-xmi
 Class {
 	#name : #BaselineOfOPUMLXMI,
 	#superclass : #BaselineOf,
-	#category : 'BaselineOfOPUMLXMI'
+	#category : #BaselineOfOPUMLXMI
 }
 
 { #category : #baselines }
@@ -12,7 +12,7 @@ BaselineOfOPUMLXMI >> baseline: spec [
 	<baseline>
 	spec
 		for: #common
-		do: [ spec baseline: 'OPXMI' with: [ spec repository: 'github://openponk/xmi/repository' ].
+		do: [ spec baseline: 'OPXMI' with: [ spec repository: 'github://openponk/xmi:v2.0.0/repository' ].
 			spec
 				baseline: 'UMLMetamodel'
 				with: [ spec repository: 'github://openponk/uml-metamodel:v1.x/repository' ].
