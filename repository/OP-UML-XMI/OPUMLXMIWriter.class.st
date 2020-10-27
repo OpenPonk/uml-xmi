@@ -9,7 +9,7 @@ Class {
 		'umlMetamodel',
 		'stereotypes'
 	],
-	#category : 'OP-UML-XMI-Writer'
+	#category : #'OP-UML-XMI-Writer'
 }
 
 { #category : #'instance creation' }
@@ -103,10 +103,19 @@ OPUMLXMIWriter >> processStereotype: aStereotype of: anElement [
 	stereoMeta := aStereotype umlMetaClass.
 	element xmiName: stereoMeta profile name , ':' , stereoMeta name.
 	containedItems
-		add: (OPXMIValueAttribute xmiName: 'xmi:id' value: (self idFor: aStereotype)).
+		add:
+			(OPXMIValueAttribute
+				xmiName: 'xmi:id'
+				value: (self idFor: aStereotype)).
+	containedItems
+		add:
+			(OPXMIValueAttribute
+				xmiName: 'base_Element'
+				value: (self idFor: anElement)).
 	properties := stereoMeta ownedAttributes asArray.
 	properties
-		do: [ :each | containedItems addAll: (self writeProperty: each of: aStereotype) ].
+		do:
+			[ :each | containedItems addAll: (self writeProperty: each of: aStereotype) ].
 	stereotypes add: element
 ]
 

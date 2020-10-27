@@ -15,17 +15,40 @@ OPUMLXMIReader class >> read: anXmlStream [
 
 { #category : #'instance creation' }
 OPUMLXMIReader class >> read: anXmlStream pathmap: aPathmap [
-	| xmi pathmap xmiResult |
+	| xmi pathmap xmiResult processedXmi |
 	pathmap := aPathmap mapping copy.
 	pathmap at: 'result' put: anXmlStream contents.
 	xmiResult := OPXMIReader readFromMapping: pathmap.
 	xmi := xmiResult at: 'result'.
-	^ (self new readXmi: xmi) first
+	processedXmi := self new readXmi: xmi.
+	^ processedXmi first
 ]
 
 { #category : #'instance creation' }
 OPUMLXMIReader class >> readFrom: aStream [
 	^ (self new readXmi: (OPXMIReader readFrom: aStream)) first
+]
+
+{ #category : #reading }
+OPUMLXMIReader >> applyStereotypesAmongst: elements to: models [
+	| possibleStereotypes |
+	possibleStereotypes := ((models
+		flatCollect: [ :each | 
+			(each profileApplications collect: #appliedProfile)
+				flatCollect: [ :eachProfile | eachProfile ownedStereotype ] ])
+		collect: [ :each | each name -> each ]) asDictionary.
+	elements
+		select: [ :each | 
+			(possibleStereotypes includesKey: each xmiName)
+				and: [ each containedItems
+						anySatisfy: [ :any | any xmiName beginsWith: 'base_' ] ] ]
+		thenDo: [ :each | 
+			(instanceCache
+				at:
+					(each containedItems
+						detect: [ :any | any xmiName beginsWith: 'base_' ])
+						referencedElement xmiId)
+				applyStereotype: (possibleStereotypes at: each xmiName) implementationClass new ]
 ]
 
 { #category : #converting }
@@ -96,20 +119,27 @@ OPUMLXMIReader >> readItem: anItem property: aProperty [
 	| instance groups |
 	anItem isValueItem
 		ifTrue: [ ^ self valueFor: anItem value property: aProperty ].
+		
 	anItem isReferenceItem
 		ifTrue: [ aProperty name = 'appliedProfile'
 				ifTrue: [ ^ self readProfileItem: anItem property: aProperty ].
-			(anItem href isNotNil and: [ anItem href beginsWith: 'http://www.omg.org/spec/UML/' ])
+				
+			(anItem href isNotNil
+				and: [ anItem href beginsWith: 'http://www.omg.org/spec/UML/' ])
 				ifTrue: [ ^ self readMetamodelItem: anItem property: aProperty ].
-			(anItem href isNotNil and: [ anItem href beginsWith: 'http://schema.omg.org/spec/MOF/' ])
+			(anItem href isNotNil
+				and: [ anItem href beginsWith: 'http://schema.omg.org/spec/MOF/' ])
 				ifTrue: [ ^ self readMofItem: anItem property: aProperty ].
 			^ anItem referencedElements
 				collect: [ :each | self readItem: each property: aProperty ] ].
-	instanceCache at: (self uniqueIdOf: anItem) ifPresent: [ :match | ^ match ].
+	instanceCache
+		at: (self uniqueIdOf: anItem)
+		ifPresent: [ :match | ^ match ].
 	instance := self instanceFor: anItem property: aProperty.
 	groups := self groupedChildrenIn: anItem.
 	groups
-		keysAndValuesDo: [ :key :values | self readPropertyNamed: key values: values instance: instance ].
+		keysAndValuesDo:
+			[ :key :values | self readPropertyNamed: key values: values instance: instance ].
 	^ instance
 ]
 
@@ -175,15 +205,17 @@ OPUMLXMIReader >> readPropertyNamed: aKey values: values instance: anInstance [
 
 { #category : #reading }
 OPUMLXMIReader >> readXmi: anXmi [
-	"
-	anXmi containedItems collect: [ :each | self readItem: each property: nil ]
-	"
-
-	(anXmi isObjectElement and: [ #(Model Package Profile) includes: anXmi xmiName ])
+	| elements models |
+	(anXmi isObjectElement
+		and: [ #(Model Package Profile) includes: anXmi xmiName ])
 		ifTrue: [ ^ self readItem: anXmi property: nil ].
-	^ anXmi containedItems
-		select: [ :each | each isObjectElement and: [ #(Model Package Profile) includes: each xmiName ] ]
-		thenCollect: [ :each | self readItem: each property: nil ]
+	elements := anXmi containedItems
+		select: [ :each | each isObjectElement ].
+	models := elements
+		select: [ :each | #(Model Package Profile) includes: each xmiName ]
+		thenCollect: [ :each | self readItem: each property: nil ].
+	self applyStereotypesAmongst: elements to: models.
+	^ models
 ]
 
 { #category : #reading }
