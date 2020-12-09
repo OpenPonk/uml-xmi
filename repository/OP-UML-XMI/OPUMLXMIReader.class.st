@@ -168,7 +168,7 @@ OPUMLXMIReader >> readProfileItem: anItem property: aProperty [
 	self class environment
 		at: #OPUmlCustomProfile
 		ifPresent: [ :cls | 
-			factory := cls withAllSubclasses
+			factory := cls allSubclasses
 				detect: [ :each | each profile URI = parts first ]
 				ifNone: [ self error: 'No profile with URI ' , parts first , ' found' ] ]
 		ifAbsent: [  ].
