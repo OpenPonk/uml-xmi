@@ -1,9 +1,11 @@
 language: smalltalk
-sudo: false
 
 os:
   - linux
 
-smalltalk:
-  - Pharo64-8.0
-  - Pharo64-9.0
+matrix:
+  include:
+    - smalltalk: Pharo64-8.0
+    - smalltalk: Pharo64-9.0
+  allow_failures:
+    - smalltalk: Pharo64-9.0
