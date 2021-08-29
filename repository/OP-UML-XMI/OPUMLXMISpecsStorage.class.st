@@ -99,6 +99,17 @@ OPUMLXMISpecsStorage class >> primitivesMetamodel [
 ]
 
 { #category : #actions }
+OPUMLXMISpecsStorage class >> reset [
+
+	<script>
+	Current := nil.
+	MetaClassMap := nil.
+	PrimitivesMap := nil.
+	PrimitivesMetaModel := nil.
+	UmlMetaModel := nil
+]
+
+{ #category : #actions }
 OPUMLXMISpecsStorage class >> resetCurrent [
 	<script>
 	Current := nil
