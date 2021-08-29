@@ -11,7 +11,7 @@ Class {
 		'PrimitivesMetaModel',
 		'UmlMetaModel'
 	],
-	#category : 'OP-UML-XMI-Utility'
+	#category : #'OP-UML-XMI-Utility'
 }
 
 { #category : #accessing }
@@ -144,11 +144,28 @@ OPUMLXMISpecsStorage >> initialize [
 
 { #category : #actions }
 OPUMLXMISpecsStorage >> retrieveSpecsFor: aUrl [
-	| segments |
+
+	| segments specs |
 	segments := aUrl asZnUrl segments.
-	"#(spec UML 20131001 PrimitiveTypes.xmi)"
-	((segments beginsWith: #(spec UML)) or: [ segments beginsWith: #(spec DD) ])
-		ifTrue:
-			[ ^ (ZnEasy get: self baseUrl , 'UML/20131001/' , segments last) entity readStream contents ].
-	self error: 'Urls like ' , aUrl , ' are not handled yet.'
+	(segments beginsWithAnyOf: #( #( spec UML ) #( spec DD ) )) ifFalse: [ 
+		^ self error: 'Urls like ' , aUrl , ' are not handled yet.' ].
+	specs := [ :job | 
+	         | response |
+	         job title: 'Downloading specs from ' , self baseUrl.
+	         response := ZnEasy get:
+		                     self baseUrl , 'UML/20131001/' , segments last.
+	         job currentValue: 50.
+	         response entity readStream contents ] asJob run.
+
+	^ [ :bar | 
+	  bar title: 'Downloading specs from ' , self baseUrl.
+	  [ 
+	  ZnClient new
+		  url: self baseUrl , 'UML/20131001/' , segments last;
+		  signalProgress: true;
+		  get ]
+		  on: HTTPProgress
+		  do: [ :progress | 
+			  progress isEmpty ifFalse: [ bar current: progress percentage ].
+			  progress resume ] ] asJob run
 ]
