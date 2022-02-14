@@ -29,6 +29,20 @@ OPUMLXMIReader class >> readFrom: aStream [
 	^ (self new readXmi: (OPXMIReader readFrom: aStream)) first
 ]
 
+{ #category : #'as yet unclassified' }
+OPUMLXMIReader >> applyStereotype: anStereotypeXMI outOf: possibleStereotypes to: anElement [
+	| stereotype groups |
+	stereotype := (possibleStereotypes at: anStereotypeXMI xmiName)
+		implementationClass new.
+	anElement applyStereotype: stereotype.
+	"anStereotypeXMI containedItems reject: [ :each | each name beginsWith: 'base_' ] thenDo: [:each | stereotype perform: (each xmiName , ':') asSymbol with: each value ]."
+	groups := self groupedChildrenIn: anStereotypeXMI.
+	(groups
+		associationsSelect: [ :each | (each key beginsWith: 'base_') not ])
+		keysAndValuesDo:
+			[ :key :values | self readPropertyNamed: key values: values instance: stereotype ]
+]
+
 { #category : #reading }
 OPUMLXMIReader >> applyStereotypesAmongst: elements to: models [
 	| possibleStereotypes |
@@ -43,12 +57,15 @@ OPUMLXMIReader >> applyStereotypesAmongst: elements to: models [
 				and: [ each containedItems
 						anySatisfy: [ :any | any xmiName beginsWith: 'base_' ] ] ]
 		thenDo: [ :each | 
-			(instanceCache
-				at:
-					(each containedItems
-						detect: [ :any | any xmiName beginsWith: 'base_' ])
-						referencedElement xmiId)
-				applyStereotype: (possibleStereotypes at: each xmiName) implementationClass new ]
+			self
+				applyStereotype: each
+				outOf: possibleStereotypes
+				to:
+					(instanceCache
+						at:
+							(each containedItems
+								detect: [ :any | any xmiName beginsWith: 'base_' ])
+								referencedElement xmiId) ]
 ]
 
 { #category : #converting }

@@ -112,7 +112,7 @@ OPUMLXMIWriter >> processStereotype: aStereotype of: anElement [
 			(OPXMIValueAttribute
 				xmiName: 'base_Element'
 				value: (self idFor: anElement)).
-	properties := stereoMeta ownedAttributes asArray.
+	properties := stereoMeta allAttributes asArray.
 	properties
 		do:
 			[ :each | containedItems addAll: (self writeProperty: each of: aStereotype) ].
