@@ -14,7 +14,14 @@ Class {
 
 { #category : #'instance creation' }
 OPUMLXMIWriter class >> toString: aModel [
-	^ OPXMIWriter writeToString: (self new write: aModel)
+
+	^ OPXMIWriter toString: (self new write: aModel)
+]
+
+{ #category : #'instance creation' }
+OPUMLXMIWriter class >> write: aModel toStream: aStream [
+
+	OPXMIWriter write: (self new write: aModel) toStream: aStream
 ]
 
 { #category : #writing }
