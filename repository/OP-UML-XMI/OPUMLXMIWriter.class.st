@@ -1,6 +1,6 @@
 Class {
-	#name : #OPUMLXMIWriter,
-	#superclass : #Object,
+	#name : 'OPUMLXMIWriter',
+	#superclass : 'Object',
 	#instVars : [
 		'classPrefix',
 		'identityCache',
@@ -9,22 +9,24 @@ Class {
 		'umlMetamodel',
 		'stereotypes'
 	],
-	#category : #'OP-UML-XMI-Writer'
+	#category : 'OP-UML-XMI-Writer',
+	#package : 'OP-UML-XMI',
+	#tag : 'Writer'
 }
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIWriter class >> toString: aModel [
 
 	^ OPXMIWriter toString: (self new write: aModel)
 ]
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIWriter class >> write: aModel toStream: aStream [
 
 	OPXMIWriter write: (self new write: aModel) toStream: aStream
 ]
 
-{ #category : #writing }
+{ #category : 'writing' }
 OPUMLXMIWriter >> accessorNameFor: aProperty [
 	| name |
 	name := aProperty name.
@@ -35,7 +37,7 @@ OPUMLXMIWriter >> accessorNameFor: aProperty [
 	^ name
 ]
 
-{ #category : #utility }
+{ #category : 'utility' }
 OPUMLXMIWriter >> asPlural: aString [
 	(aString endsWith: 's')
 		ifTrue: [ ^ aString , 'es' ].
@@ -44,7 +46,7 @@ OPUMLXMIWriter >> asPlural: aString [
 	^ aString , 's'
 ]
 
-{ #category : #utility }
+{ #category : 'utility' }
 OPUMLXMIWriter >> asSingular: aString [
 	(aString endsWith: 'ses')
 		ifTrue: [ ^ aString withoutSuffix: 'es' ].
@@ -53,27 +55,27 @@ OPUMLXMIWriter >> asSingular: aString [
 	^ aString withoutSuffix: 's'
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMIWriter >> classPrefix [
 	^ classPrefix
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMIWriter >> classPrefix: anObject [
 	classPrefix := anObject
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMIWriter >> defaultClassPrefix [
 	^ 'OPUML'
 ]
 
-{ #category : #writing }
+{ #category : 'writing' }
 OPUMLXMIWriter >> idFor: anElement [
 	^ anElement uuid asString
 ]
 
-{ #category : #initialization }
+{ #category : 'initialization' }
 OPUMLXMIWriter >> initialize [
 	super initialize.
 	unresolved := OrderedCollection new.
@@ -83,7 +85,7 @@ OPUMLXMIWriter >> initialize [
 	umlMetamodel := OPUMLXMISpecsStorage umlMetamodel
 ]
 
-{ #category : #testing }
+{ #category : 'testing' }
 OPUMLXMIWriter >> isMetaclass: aClass [
 	(aClass oclIsTypeOf: #Class)
 		ifFalse: [ ^ false ].
@@ -91,17 +93,17 @@ OPUMLXMIWriter >> isMetaclass: aClass [
 	^ false
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMIWriter >> metamodelUri [
 	^ umlMetamodel URI , '/' , umlMetamodel name , '.xmi'
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMIWriter >> primitiveTypesUri [
 	^ umlMetamodel URI , '/' , 'PrimitiveTypes' , '.xmi'
 ]
 
-{ #category : #writing }
+{ #category : 'writing' }
 OPUMLXMIWriter >> processStereotype: aStereotype of: anElement [
 	| element containedItems stereoMeta properties |
 	element := OPXMIObjectElement new.
@@ -126,14 +128,14 @@ OPUMLXMIWriter >> processStereotype: aStereotype of: anElement [
 	stereotypes add: element
 ]
 
-{ #category : #writing }
+{ #category : 'writing' }
 OPUMLXMIWriter >> processStereotypesIn: anElement [
 	anElement appliedStereotypes ifEmpty: [ ^ self ].
 	anElement appliedStereotypes
 		do: [ :stereo | self processStereotype: stereo of: anElement ]
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMIWriter >> propertiesOf: anElement [
 	| properties |
 	properties := anElement umlMetaClass allAttributes asOrderedCollection.
@@ -144,27 +146,27 @@ OPUMLXMIWriter >> propertiesOf: anElement [
 	^ properties
 ]
 
-{ #category : #writing }
+{ #category : 'writing' }
 OPUMLXMIWriter >> referenceFor: anElement [
 	^ identityCache at: anElement
 ]
 
-{ #category : #writing }
+{ #category : 'writing' }
 OPUMLXMIWriter >> resolveReferences [
 	unresolved do: #value
 ]
 
-{ #category : #writing }
+{ #category : 'writing' }
 OPUMLXMIWriter >> resolvedStereotypes [
 	^ stereotypes
 ]
 
-{ #category : #writing }
+{ #category : 'writing' }
 OPUMLXMIWriter >> umlUri [
 	^ 'http://www.omg.org/spec/UML/20110701'
 ]
 
-{ #category : #writing }
+{ #category : 'writing' }
 OPUMLXMIWriter >> write: anElement [
 	| document rootElement |
 	unresolved := OrderedCollection new.
@@ -182,7 +184,7 @@ OPUMLXMIWriter >> write: anElement [
 	^ document
 ]
 
-{ #category : #writing }
+{ #category : 'writing' }
 OPUMLXMIWriter >> writeCompositeProperty: aProperty value: aValue of: anElement [
 	| values |
 	values := aProperty isMultivalued
@@ -195,7 +197,7 @@ OPUMLXMIWriter >> writeCompositeProperty: aProperty value: aValue of: anElement 
 			el xmiName: aProperty name ]
 ]
 
-{ #category : #writing }
+{ #category : 'writing' }
 OPUMLXMIWriter >> writeElement: anElement [
 	| element containedItems properties |
 	(self isMetaclass: anElement)
@@ -219,7 +221,7 @@ OPUMLXMIWriter >> writeElement: anElement [
 	^ element
 ]
 
-{ #category : #writing }
+{ #category : 'writing' }
 OPUMLXMIWriter >> writeEnumerationProperty: aProperty value: aValue of: anElement [
 	| values |
 	(aProperty defaultValue isNotNil and: [ aProperty defaultValue instance name = aValue ])
@@ -230,7 +232,7 @@ OPUMLXMIWriter >> writeEnumerationProperty: aProperty value: aValue of: anElemen
 	^ values collect: [ :each | OPXMIValueAttribute xmiName: aProperty name value: each asString ]
 ]
 
-{ #category : #writing }
+{ #category : 'writing' }
 OPUMLXMIWriter >> writeNonCompositeProperty: aProperty value: aValue of: anElement [
 	| values referenceItem |
 	(aProperty opposite isNil or: [ aProperty opposite isComposite ])
@@ -260,7 +262,7 @@ OPUMLXMIWriter >> writeNonCompositeProperty: aProperty value: aValue of: anEleme
 	^ {referenceItem}
 ]
 
-{ #category : #writing }
+{ #category : 'writing' }
 OPUMLXMIWriter >> writePrimitiveProperty: aProperty value: aValue of: anElement [
 	| values |
 	(aProperty defaultValue isNotNil and: [ aProperty defaultValue value = aValue ])
@@ -272,7 +274,7 @@ OPUMLXMIWriter >> writePrimitiveProperty: aProperty value: aValue of: anElement 
 		collect: [ :each | OPXMIValueAttribute xmiName: aProperty name value: each asString ]
 ]
 
-{ #category : #writing }
+{ #category : 'writing' }
 OPUMLXMIWriter >> writeProperty: aProperty of: anElement [
 	| accessor value |
 	accessor := self accessorNameFor: aProperty.
@@ -295,7 +297,7 @@ OPUMLXMIWriter >> writeProperty: aProperty of: anElement [
 	^ self writeCompositeProperty: aProperty value: value of: anElement
 ]
 
-{ #category : #writing }
+{ #category : 'writing' }
 OPUMLXMIWriter >> writeTypeProperty: aProperty value: aValue of: anElement [
 	self assert: [ aProperty name = #type ].
 	(self isMetaclass: aValue)

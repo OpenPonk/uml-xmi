@@ -1,10 +1,12 @@
 Class {
-	#name : #OPUMLXMISpecsStorageTest,
-	#superclass : #TestCase,
-	#category : 'OP-UML-XMI-Tests'
+	#name : 'OPUMLXMISpecsStorageTest',
+	#superclass : 'TestCase',
+	#category : 'OP-UML-XMI-Tests',
+	#package : 'OP-UML-XMI',
+	#tag : 'Tests'
 }
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMISpecsStorageTest >> testRetrieve [
 	self skip: 'Network requests break when testing code coverage -_-'
 "	| storage contents |

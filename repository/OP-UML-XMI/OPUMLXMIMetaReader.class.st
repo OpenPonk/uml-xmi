@@ -1,21 +1,25 @@
 Class {
-	#name : #OPUMLXMIMetaReader,
-	#superclass : #OPUMLXMIReader,
-	#category : 'OP-UML-XMI-Reader'
+	#name : 'OPUMLXMIMetaReader',
+	#superclass : 'OPUMLXMIReader',
+	#category : 'OP-UML-XMI-Reader',
+	#package : 'OP-UML-XMI',
+	#tag : 'Reader'
 }
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIMetaReader >> createNewInstanceFor: anItem property: aProperty [
+
 	| name |
-	name := (#(Package Model Profile) includes: anItem xmiName)
-		ifTrue: [ anItem xmiName ]
-		ifFalse: [ anItem xmiType
-				ifNil: [ self error: 'Unknown element type.' ]
-				ifNotNil: [ :type | (type splitOn: ':') last ] ].
-	^ (self classPrefix , name) asSymbol asClass new
+	name := (#( Package Model Profile ) includes: anItem xmiName)
+		        ifTrue: [ anItem xmiName ]
+		        ifFalse: [
+			        anItem xmiType
+				        ifNil: [ self error: 'Unknown element type.' ]
+				        ifNotNil: [ :type | (type splitOn: ':') last ] ].
+	^ (Smalltalk at: (self classPrefix , name) asSymbol) new
 ]
 
-{ #category : #reading }
+{ #category : 'reading' }
 OPUMLXMIMetaReader >> readItem: anItem property: aProperty [
 	| instance groups |
 	anItem isValueItem
@@ -53,7 +57,7 @@ OPUMLXMIMetaReader >> readItem: anItem property: aProperty [
 	^ instance
 ]
 
-{ #category : #reading }
+{ #category : 'reading' }
 OPUMLXMIMetaReader >> valueFor: anObject [
 	anObject = 'true'
 		ifTrue: [ ^ true ].
