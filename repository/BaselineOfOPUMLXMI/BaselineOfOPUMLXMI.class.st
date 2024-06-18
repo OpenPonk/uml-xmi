@@ -2,12 +2,13 @@
 Baseline for https://github.com/OpenPonk/uml-xmi
 "
 Class {
-	#name : #BaselineOfOPUMLXMI,
-	#superclass : #BaselineOf,
-	#category : #BaselineOfOPUMLXMI
+	#name : 'BaselineOfOPUMLXMI',
+	#superclass : 'BaselineOf',
+	#category : 'BaselineOfOPUMLXMI',
+	#package : 'BaselineOfOPUMLXMI'
 }
 
-{ #category : #baselines }
+{ #category : 'baselines' }
 BaselineOfOPUMLXMI >> baseline: spec [
 	<baseline>
 	spec
