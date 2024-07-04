@@ -104,7 +104,7 @@ OPUMLXMISpecsStorage class >> primitivesMetamodel [
 OPUMLXMISpecsStorage class >> reset [
 
 	<script>
-	Current := nil.
+	self resetCurrent.
 	MetaClassMap := nil.
 	PrimitivesMap := nil.
 	PrimitivesMetaModel := nil.
