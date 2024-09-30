@@ -1,1 +1,1 @@
-Package { #name : #BaselineOfOPUMLXMI }
+Package { #name : 'BaselineOfOPUMLXMI' }
