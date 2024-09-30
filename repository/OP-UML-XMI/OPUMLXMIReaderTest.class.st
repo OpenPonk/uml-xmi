@@ -1,14 +1,16 @@
 Class {
-	#name : #OPUMLXMIReaderTest,
-	#superclass : #TestCase,
+	#name : 'OPUMLXMIReaderTest',
+	#superclass : 'TestCase',
 	#instVars : [
 		'reader',
 		'packagedElementProperty'
 	],
-	#category : 'OP-UML-XMI-Tests'
+	#category : 'OP-UML-XMI-Tests',
+	#package : 'OP-UML-XMI',
+	#tag : 'Tests'
 }
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIReaderTest >> association [
 	| assoc ownedAttr ownedEnd |
 	ownedAttr := OPXMIObjectElement new.
@@ -43,7 +45,7 @@ OPUMLXMIReaderTest >> association [
 	^ assoc
 ]
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIReaderTest >> attributeWithHrefType [
 	^ OPXMIReader
 		readFrom:
@@ -52,7 +54,7 @@ OPUMLXMIReaderTest >> attributeWithHrefType [
 </ownedAttribute>'
 ]
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIReaderTest >> attributeWithPrimitiveType [
 	^ OPXMIReader
 		readFrom:
@@ -61,7 +63,7 @@ OPUMLXMIReaderTest >> attributeWithPrimitiveType [
 </ownedAttribute>'
 ]
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIReaderTest >> defaultValueElement [
 	^ OPXMIObjectElement new
 		containedItems:
@@ -69,7 +71,7 @@ OPUMLXMIReaderTest >> defaultValueElement [
 			OPXMIValueAttribute xmiName: 'xmi:id' value: 'lowerValue'}
 ]
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIReaderTest >> elementWithGeneralization [
 	"Comment -> Element"
 
@@ -95,7 +97,7 @@ OPUMLXMIReaderTest >> elementWithGeneralization [
 									OPXMIValueAttribute xmiName: 'name' value: 'Element'}}}}
 ]
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIReaderTest >> generalizationElement [
 	"-> Element"
 
@@ -115,12 +117,12 @@ OPUMLXMIReaderTest >> generalizationElement [
 							OPXMIValueAttribute xmiName: 'name' value: 'Element'}}}
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMIReaderTest >> metaClassNamed: aName [
 	^ OPUMLXMISpecsStorage metaClassNamed: aName
 ]
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIReaderTest >> multipleNestedAttributes [
 	^ OPXMIObjectElement new
 		xmiName: 'packagedElement';
@@ -142,7 +144,7 @@ OPUMLXMIReaderTest >> multipleNestedAttributes [
 					OPXMIValueElement xmiName: 'name' value: 'body'}}
 ]
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIReaderTest >> nestedComplexElement [
 	^ OPXMIObjectElement new
 		xmiName: 'Attribute';
@@ -157,7 +159,7 @@ OPUMLXMIReaderTest >> nestedComplexElement [
 					OPXMIValueElement xmiName: 'value' value: '*'}}
 ]
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIReaderTest >> packageImportPackage [
 	| activities classification |
 	classification := OPXMIObjectElement new
@@ -198,25 +200,25 @@ OPUMLXMIReaderTest >> packageImportPackage [
 					OPXMIReferenceAttribute xmiName: 'importedPackage' referencedElements: {classification}}}
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMIReaderTest >> primitiveTypeNamed: aName [
 	^ OPUMLXMISpecsStorage primitiveTypeNamed: aName
 ]
 
-{ #category : #running }
+{ #category : 'running' }
 OPUMLXMIReaderTest >> property: aPropertyName in: aContainerClass [
 	^ (OPUMLXMISpecsStorage metaClassFor: aContainerClass) ownedAttributes
 		detect: [ :each | each name = aPropertyName ]
 ]
 
-{ #category : #running }
+{ #category : 'running' }
 OPUMLXMIReaderTest >> setUp [
 	reader := OPUMLXMIReader new.
 	packagedElementProperty := (OPUMLXMISpecsStorage metaClassFor: OPUMLPackage new)
 		ownedAttributes detect: [ :each | each name = 'packagedElement' ]
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testAmbiguousPackageImport [
 	"xmi:id of <packageImport> elements are not valid and should be ignored (they are not unique). Test that we can load correctly despite that"
 
@@ -234,7 +236,7 @@ OPUMLXMIReaderTest >> testAmbiguousPackageImport [
 		equals: classificationPkg
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testAssociation [
 	| result |
 	result := reader readItem: self association property: packagedElementProperty.
@@ -247,7 +249,7 @@ OPUMLXMIReaderTest >> testAssociation [
 	self assert: (result memberEnds includes: result ownedEnds first)
 ]
 
-{ #category : #'tests - reading - value' }
+{ #category : 'tests - reading - value' }
 OPUMLXMIReaderTest >> testBooleanStringValue [
 	| result stringProperty |
 	stringProperty := (OPUMLXMISpecsStorage metaClassFor: OPUMLProperty new) allAttributes
@@ -256,7 +258,7 @@ OPUMLXMIReaderTest >> testBooleanStringValue [
 	self assert: result equals: 'true'
 ]
 
-{ #category : #'tests - reading - value' }
+{ #category : 'tests - reading - value' }
 OPUMLXMIReaderTest >> testBooleanValue [
 	| result booleanProperty |
 	booleanProperty := (OPUMLXMISpecsStorage metaClassFor: OPUMLProperty new) ownedAttributes
@@ -265,7 +267,7 @@ OPUMLXMIReaderTest >> testBooleanValue [
 	self assert: result equals: true
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testCreateNewInstanceProperty [
 	| item property |
 	item := OPXMIObjectElement new
@@ -278,7 +280,7 @@ OPUMLXMIReaderTest >> testCreateNewInstanceProperty [
 		equals: #ProfileApplication
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testCreateNewInstanceXmiId [
 	| item |
 	item := OPXMIObjectElement new
@@ -289,7 +291,7 @@ OPUMLXMIReaderTest >> testCreateNewInstanceXmiId [
 		equals: 'CustomId'
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testCreateNewInstanceXmiName [
 	| item |
 	item := OPXMIObjectElement new
@@ -300,7 +302,7 @@ OPUMLXMIReaderTest >> testCreateNewInstanceXmiName [
 		equals: #Package
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testCreateNewInstanceXmiType [
 	| item |
 	item := OPXMIObjectElement new
@@ -311,7 +313,7 @@ OPUMLXMIReaderTest >> testCreateNewInstanceXmiType [
 		equals: #Class
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testGeneralizationElement [
 	| result |
 	result := reader
@@ -321,7 +323,7 @@ OPUMLXMIReaderTest >> testGeneralizationElement [
 	self assert: result general name equals: 'Element'
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testGroupedChildren [
 	| result |
 	result := reader groupedChildrenIn: self multipleNestedAttributes.
@@ -330,7 +332,7 @@ OPUMLXMIReaderTest >> testGroupedChildren [
 	self assert: (result at: #ownedAttribute) size equals: 2
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testInstance [
 	| element result1 result2 |
 	element := OPXMIObjectElement new
@@ -342,7 +344,7 @@ OPUMLXMIReaderTest >> testInstance [
 	self assert: result1 == result2 description: 'We expect the same object.'
 ]
 
-{ #category : #'tests - reading - value' }
+{ #category : 'tests - reading - value' }
 OPUMLXMIReaderTest >> testIntegerStringValue [
 	| result stringProperty |
 	stringProperty := (OPUMLXMISpecsStorage metaClassFor: OPUMLProperty new) allAttributes
@@ -351,7 +353,7 @@ OPUMLXMIReaderTest >> testIntegerStringValue [
 	self assert: result equals: '123'
 ]
 
-{ #category : #'tests - reading - value' }
+{ #category : 'tests - reading - value' }
 OPUMLXMIReaderTest >> testIntegerValue [
 	| result integerProperty |
 	integerProperty := (OPUMLXMISpecsStorage metaClassFor: OPUMLProperty new) allAttributes
@@ -360,7 +362,7 @@ OPUMLXMIReaderTest >> testIntegerValue [
 	self assert: result equals: 123
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testMultipleNestedAttributes [
 	| result |
 	result := reader readItem: self multipleNestedAttributes property: packagedElementProperty.
@@ -370,7 +372,7 @@ OPUMLXMIReaderTest >> testMultipleNestedAttributes [
 	self assert: result ownedAttributes second name equals: 'body'
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testNestedComplexElement [
 	| result |
 	result := reader
@@ -382,7 +384,7 @@ OPUMLXMIReaderTest >> testNestedComplexElement [
 	self assert: result lowerValue value equals: nil
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testReadBoolean [
 	| result |
 	result := reader
@@ -391,7 +393,7 @@ OPUMLXMIReaderTest >> testReadBoolean [
 	self assert: result equals: true
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testReadImportedType [
 	| result property |
 	property := (self metaClassNamed: #Class) allAttributes
@@ -400,7 +402,7 @@ OPUMLXMIReaderTest >> testReadImportedType [
 	self assert: result type equals: (self metaClassNamed: #Association)
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testReadPrimitiveType [
 	| result property |
 	property := (self metaClassNamed: #Class) allAttributes
@@ -409,7 +411,7 @@ OPUMLXMIReaderTest >> testReadPrimitiveType [
 	self assert: result type equals: (self primitiveTypeNamed: #Boolean)
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testReadSimpleObject [
 	| element result |
 	element := OPXMIObjectElement new
@@ -422,7 +424,7 @@ OPUMLXMIReaderTest >> testReadSimpleObject [
 	self assert: result body equals: 'CONTENT'
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testReadTrivialXmi [
 	| result |
 	result := reader readXmi: self trivialXmi.
@@ -430,7 +432,7 @@ OPUMLXMIReaderTest >> testReadTrivialXmi [
 	self assert: result first umlClassName equals: #Package
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testReadTrivialishXmi [
 	| result |
 	result := reader readXmi: self trivialishXmi.
@@ -440,7 +442,7 @@ OPUMLXMIReaderTest >> testReadTrivialishXmi [
 	self assert: result first packagedElements first name equals: 'Activities'
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testReferenceElement [
 	| result gen |
 	result := reader
@@ -452,7 +454,7 @@ OPUMLXMIReaderTest >> testReferenceElement [
 	self assert: gen general name equals: 'Element'
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testUniqueId [
 	| regular packageImport |
 	regular := OPXMIObjectElement new
@@ -467,7 +469,7 @@ OPUMLXMIReaderTest >> testUniqueId [
 	self assert: (reader uniqueIdOf: packageImport) equals: '_packageImport.1-AAA'
 ]
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIReaderTest >> trivialXmi [
 	^ OPXMIObjectElement new
 		xmiName: 'XMI';
@@ -489,7 +491,7 @@ OPUMLXMIReaderTest >> trivialXmi [
 					OPXMIValueAttribute xmiName: 'xmi:type' value: 'mofext:Tag'}}
 ]
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIReaderTest >> trivialishXmi [
 	^ OPXMIObjectElement new
 		xmiName: 'XMI';

@@ -1,19 +1,21 @@
 Class {
-	#name : #OPUMLXMIReader,
-	#superclass : #Object,
+	#name : 'OPUMLXMIReader',
+	#superclass : 'Object',
 	#instVars : [
 		'classPrefix',
 		'instanceCache'
 	],
-	#category : #'OP-UML-XMI-Reader'
+	#category : 'OP-UML-XMI-Reader',
+	#package : 'OP-UML-XMI',
+	#tag : 'Reader'
 }
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIReader class >> read: anXmlStream [
 	^ self read: anXmlStream pathmap: OPUMLXMIPathmap default
 ]
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIReader class >> read: anXmlStream pathmap: aPathmap [
 	| xmi pathmap xmiResult processedXmi |
 	pathmap := aPathmap mapping copy.
@@ -24,12 +26,26 @@ OPUMLXMIReader class >> read: anXmlStream pathmap: aPathmap [
 	^ processedXmi first
 ]
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIReader class >> readFrom: aStream [
 	^ (self new readXmi: (OPXMIReader readFrom: aStream)) first
 ]
 
-{ #category : #reading }
+{ #category : 'as yet unclassified' }
+OPUMLXMIReader >> applyStereotype: anStereotypeXMI outOf: possibleStereotypes to: anElement [
+	| stereotype groups |
+	stereotype := (possibleStereotypes at: anStereotypeXMI xmiName)
+		implementationClass new.
+	anElement applyStereotype: stereotype.
+	"anStereotypeXMI containedItems reject: [ :each | each name beginsWith: 'base_' ] thenDo: [:each | stereotype perform: (each xmiName , ':') asSymbol with: each value ]."
+	groups := self groupedChildrenIn: anStereotypeXMI.
+	(groups
+		associationsSelect: [ :each | (each key beginsWith: 'base_') not ])
+		keysAndValuesDo:
+			[ :key :values | self readPropertyNamed: key values: values instance: stereotype ]
+]
+
+{ #category : 'reading' }
 OPUMLXMIReader >> applyStereotypesAmongst: elements to: models [
 	| possibleStereotypes |
 	possibleStereotypes := ((models
@@ -43,15 +59,18 @@ OPUMLXMIReader >> applyStereotypesAmongst: elements to: models [
 				and: [ each containedItems
 						anySatisfy: [ :any | any xmiName beginsWith: 'base_' ] ] ]
 		thenDo: [ :each | 
-			(instanceCache
-				at:
-					(each containedItems
-						detect: [ :any | any xmiName beginsWith: 'base_' ])
-						referencedElement xmiId)
-				applyStereotype: (possibleStereotypes at: each xmiName) implementationClass new ]
+			self
+				applyStereotype: each
+				outOf: possibleStereotypes
+				to:
+					(instanceCache
+						at:
+							(each containedItems
+								detect: [ :any | any xmiName beginsWith: 'base_' ])
+								referencedElement xmiId) ]
 ]
 
-{ #category : #converting }
+{ #category : 'converting' }
 OPUMLXMIReader >> asPlural: aString [
 	(aString endsWith: 's')
 		ifTrue: [ ^ aString , 'es' ].
@@ -60,61 +79,63 @@ OPUMLXMIReader >> asPlural: aString [
 	^ aString , 's'
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMIReader >> classPrefix [
 	^ classPrefix
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMIReader >> classPrefix: anObject [
 	classPrefix := anObject
 ]
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIReader >> createNewInstanceFor: anItem property: aProperty [
+
 	| name |
 	name := aProperty
-		ifNil: [ "Root elements only"
-			self assert: [ #(Package Model Profile) includes: anItem xmiName ].
-			anItem xmiName ]
-		ifNotNil: [ anItem xmiType
-				ifNil: [ aProperty type name ]
-				ifNotNil: [ :type | (type splitOn: ':') last ] ].
-	^ (self classPrefix , name) asSymbol asClass new
-		uuid:
-			([ UUID fromString: anItem xmiId ]
-				on: Error
-				do: [ anItem xmiId ]);
-		yourself
+		        ifNil: [ "Root elements only"
+			        self assert: [
+				        #( Package Model Profile ) includes: anItem xmiName ].
+			        anItem xmiName ]
+		        ifNotNil: [
+			        anItem xmiType
+				        ifNil: [ aProperty type name ]
+				        ifNotNil: [ :type | (type splitOn: ':') last ] ].
+	^ (Smalltalk at: (self classPrefix , name) asSymbol) new
+		  uuid: ([ UUID fromString: anItem xmiId ]
+				   on: Error
+				   do: [ anItem xmiId ]);
+		  yourself
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMIReader >> defaultClassPrefix [
 	^ 'OPUML'
 ]
 
-{ #category : #reading }
+{ #category : 'reading' }
 OPUMLXMIReader >> groupedChildrenIn: anObjectElement [
 	^ ((anObjectElement containedItems
 		reject: [ :each | #('xmi:' 'xmlns:') anySatisfy: [ :prefix | each xmiName beginsWith: prefix ] ])
 		reject: [ :each | #('Extension' 'default' 'uri') includes: each xmiName ]) groupedBy: #xmiName
 ]
 
-{ #category : #initialization }
+{ #category : 'initialization' }
 OPUMLXMIReader >> initialize [
 	super initialize.
 	instanceCache := Dictionary new.
 	classPrefix := self defaultClassPrefix
 ]
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIReader >> instanceFor: anObjectElement property: aProperty [
 	^ instanceCache
 		at: (self uniqueIdOf: anObjectElement)
 		ifAbsentPut: [ self createNewInstanceFor: anObjectElement property: aProperty ]
 ]
 
-{ #category : #reading }
+{ #category : 'reading' }
 OPUMLXMIReader >> readItem: anItem property: aProperty [
 	| instance groups |
 	anItem isValueItem
@@ -143,7 +164,7 @@ OPUMLXMIReader >> readItem: anItem property: aProperty [
 	^ instance
 ]
 
-{ #category : #reading }
+{ #category : 'reading' }
 OPUMLXMIReader >> readMetamodelItem: anItem property: aProperty [
 	| parts |
 	parts := anItem href splitOn: '#'.
@@ -154,14 +175,14 @@ OPUMLXMIReader >> readMetamodelItem: anItem property: aProperty [
 	self error: 'Unknown type at ' , anItem href
 ]
 
-{ #category : #reading }
+{ #category : 'reading' }
 OPUMLXMIReader >> readMofItem: anItem property: aProperty [
 	| parts |
 	parts := anItem href splitOn: '#'.
 	^ OPUMLXMISpecsStorage primitiveTypeNamed: parts second
 ]
 
-{ #category : #reading }
+{ #category : 'reading' }
 OPUMLXMIReader >> readProfileItem: anItem property: aProperty [
 	| parts factory |
 	parts := anItem href splitOn: '#'.
@@ -175,7 +196,7 @@ OPUMLXMIReader >> readProfileItem: anItem property: aProperty [
 	^ factory profile
 ]
 
-{ #category : #reading }
+{ #category : 'reading' }
 OPUMLXMIReader >> readPropertyNamed: aKey values: values instance: anInstance [
 	| property pluralSelector isMultivalued sg arguments pl selector |
 	property := (anInstance umlMetaClass allAttributes select: [ :each | each name = aKey ])
@@ -203,7 +224,7 @@ OPUMLXMIReader >> readPropertyNamed: aKey values: values instance: anInstance [
 				ifTrue: [ anInstance perform: selector with: arguments first ] ]
 ]
 
-{ #category : #reading }
+{ #category : 'reading' }
 OPUMLXMIReader >> readXmi: anXmi [
 	| elements models |
 	(anXmi isObjectElement
@@ -218,7 +239,7 @@ OPUMLXMIReader >> readXmi: anXmi [
 	^ models
 ]
 
-{ #category : #reading }
+{ #category : 'reading' }
 OPUMLXMIReader >> uniqueIdOf: anObject [
 	anObject xmiName = 'packageImport'
 		ifTrue: [ ^ anObject xmiId , '-'
@@ -226,7 +247,7 @@ OPUMLXMIReader >> uniqueIdOf: anObject [
 	^ anObject xmiId
 ]
 
-{ #category : #reading }
+{ #category : 'reading' }
 OPUMLXMIReader >> valueFor: anObject property: aProperty [
 	(#('Integer') includes: aProperty type name)
 		ifTrue: [ ^ Number readFromString: anObject ].

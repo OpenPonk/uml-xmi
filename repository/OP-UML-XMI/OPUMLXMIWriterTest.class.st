@@ -1,13 +1,15 @@
 Class {
-	#name : #OPUMLXMIWriterTest,
-	#superclass : #TestCase,
+	#name : 'OPUMLXMIWriterTest',
+	#superclass : 'TestCase',
 	#instVars : [
 		'writer'
 	],
-	#category : 'OP-UML-XMI-Tests'
+	#category : 'OP-UML-XMI-Tests',
+	#package : 'OP-UML-XMI',
+	#tag : 'Tests'
 }
 
-{ #category : #'instance creation' }
+{ #category : 'instance creation' }
 OPUMLXMIWriterTest >> createTestProfile [
 	| profile elementMetaclass associationMetaclass issueTag importedPackage packageImport |
 	profile := OPUMLProfile new
@@ -35,7 +37,7 @@ OPUMLXMIWriterTest >> createTestProfile [
 	^ profile
 ]
 
-{ #category : #support }
+{ #category : 'support' }
 OPUMLXMIWriterTest >> newStereotype: aName to: aBaseClass [
 	| stereotype baseName extension baseProperty extensionProperty |
 	baseName := aBaseClass name.
@@ -68,41 +70,19 @@ OPUMLXMIWriterTest >> newStereotype: aName to: aBaseClass [
 	extension}
 ]
 
-{ #category : #running }
+{ #category : 'running' }
 OPUMLXMIWriterTest >> setUp [
 	super setUp.
 	writer := OPUMLXMIWriter new.
 	writer classPrefix: 'OPUML'
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIWriterTest >> testClassPrefix [
 	self assert: writer classPrefix equals: 'OPUML'
 ]
 
-{ #category : #'tests - stereotypes' }
-OPUMLXMIWriterTest >> testElementWithStereotype [
-	| result element package profile issueTag |
-	self skip: 'I can''t test this without Profiles being loaded.'.
-	profile := IPIssuesProfileFactory profile.
-	package := OPUMLPackage new name: 'TestPackage'.
-	package profileApplications
-		add:
-			(OPUMLProfileApplication new
-				uuid: package uuid , '-_profileApplication.0';
-				appliedProfile: profile).
-	issueTag := profile ownedStereotype detect: [ :each | each name = 'IssueTag' ].
-	element := OPUMLElement new uuid: 'Element'.
-	package packagedElements add: element.
-	element applyStereotype: issueTag implementationClass new.
-	element appliedStereotypes first reviewed: true.
-	result := (writer write: package) containedItems last.
-	self assert: result xmiName equals: 'IssuesProfile:IssueTag'.
-	self assert: result containedItems second xmiName equals: 'reviewed'.
-	self assert: result containedItems second value equals: 'true'
-]
-
-{ #category : #'tests - stereotypes' }
+{ #category : 'tests - stereotypes' }
 OPUMLXMIWriterTest >> testWriteAppliedProfile [
 	| profile application result property |
 	profile := OPUMLProfile new
@@ -122,7 +102,7 @@ OPUMLXMIWriterTest >> testWriteAppliedProfile [
 	self assert: result first href equals: 'http://www.example.com/TestProfile#id0'
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIWriterTest >> testWriteEnumerationProperty [
 	| element property result |
 	element := OPUMLPackageableElement new.
@@ -133,7 +113,7 @@ OPUMLXMIWriterTest >> testWriteEnumerationProperty [
 	self assert: result equals: {OPXMIValueAttribute xmiName: 'visibility' value: 'private'}
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIWriterTest >> testWriteEnumerationPropertyDefaultValue [
 	| element property result |
 	element := OPUMLPackageableElement new.
@@ -143,7 +123,7 @@ OPUMLXMIWriterTest >> testWriteEnumerationPropertyDefaultValue [
 	self assert: result equals: #()
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIWriterTest >> testWriteEnumerationPropertyNoDefault [
   | element property result |
   element := OPUMLNamedElement new.
@@ -154,7 +134,7 @@ OPUMLXMIWriterTest >> testWriteEnumerationPropertyNoDefault [
   self assert: result equals: {OPXMIValueAttribute xmiName: 'visibility' value: 'private'}
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIWriterTest >> testWriteMetamodelTypeProperty [
 	| element property result comment commentXmi |
 	comment := OPUMLXMISpecsStorage metaClassNamed: #Comment.
@@ -168,7 +148,7 @@ OPUMLXMIWriterTest >> testWriteMetamodelTypeProperty [
 	self assert: result first referencedElement equals: nil
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 OPUMLXMIWriterTest >> testWriteTypeProperty [
 	| element property result comment commentXmi |
 	comment := OPUMLClass new name: 'Comment'.

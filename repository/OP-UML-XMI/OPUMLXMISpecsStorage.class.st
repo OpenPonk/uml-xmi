@@ -1,6 +1,6 @@
 Class {
-	#name : #OPUMLXMISpecsStorage,
-	#superclass : #Object,
+	#name : 'OPUMLXMISpecsStorage',
+	#superclass : 'Object',
 	#instVars : [
 		'storage'
 	],
@@ -11,10 +11,12 @@ Class {
 		'PrimitivesMetaModel',
 		'UmlMetaModel'
 	],
-	#category : #'OP-UML-XMI-Utility'
+	#category : 'OP-UML-XMI-Utility',
+	#package : 'OP-UML-XMI',
+	#tag : 'Utility'
 }
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMISpecsStorage class >> current [
 	"
 	Current := nil
@@ -22,7 +24,7 @@ OPUMLXMISpecsStorage class >> current [
 	^ Current ifNil: [ Current := self new ]
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMISpecsStorage class >> loadMetamodel [
 	"
 	UmlMetaModel := nil.
@@ -49,12 +51,12 @@ OPUMLXMISpecsStorage class >> loadMetamodel [
 	UmlMetaModel}
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMISpecsStorage class >> metaClassFor: anElement [
 	^ self metaClassNamed: anElement umlClassName
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMISpecsStorage class >> metaClassMap [
 	"
 	MetaClassMap := nil
@@ -66,17 +68,17 @@ OPUMLXMISpecsStorage class >> metaClassMap [
 				thenCollect: [ :each | each name -> each ]) asDictionary ]
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMISpecsStorage class >> metaClassNamed: aClassName [
 	^ self metaClassMap at: aClassName
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMISpecsStorage class >> primitiveTypeNamed: aPrimitiveName [
 	^ self primitivesMap at: aPrimitiveName
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMISpecsStorage class >> primitivesMap [
 	"
 	PrimitivesMap := nil
@@ -87,7 +89,7 @@ OPUMLXMISpecsStorage class >> primitivesMap [
 				collect: [ :each | each name -> each ]) asDictionary ]
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMISpecsStorage class >> primitivesMetamodel [
 	"
 	PrimitivesMetaModel := nil.
@@ -98,24 +100,24 @@ OPUMLXMISpecsStorage class >> primitivesMetamodel [
 	^ PrimitivesMetaModel
 ]
 
-{ #category : #actions }
+{ #category : 'actions' }
 OPUMLXMISpecsStorage class >> reset [
 
 	<script>
-	Current := nil.
+	self resetCurrent.
 	MetaClassMap := nil.
 	PrimitivesMap := nil.
 	PrimitivesMetaModel := nil.
 	UmlMetaModel := nil
 ]
 
-{ #category : #actions }
+{ #category : 'actions' }
 OPUMLXMISpecsStorage class >> resetCurrent [
 	<script>
 	Current := nil
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMISpecsStorage class >> umlMetamodel [
 	"
 	UmlMetaModel := nil.
@@ -126,23 +128,23 @@ OPUMLXMISpecsStorage class >> umlMetamodel [
 	^ UmlMetaModel
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMISpecsStorage >> at: aUrl [
 	^ storage at: aUrl ifAbsentPut: [ self retrieveSpecsFor: aUrl ]
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 OPUMLXMISpecsStorage >> baseUrl [
 	^ 'https://raw.githubusercontent.com/OpenPonk/specs-repository/master/'
 ]
 
-{ #category : #initialization }
+{ #category : 'initialization' }
 OPUMLXMISpecsStorage >> initialize [
 	super initialize.
 	storage := Dictionary new
 ]
 
-{ #category : #actions }
+{ #category : 'actions' }
 OPUMLXMISpecsStorage >> retrieveSpecsFor: aUrl [
 
 	| segments specs |
