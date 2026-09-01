@@ -1,3 +1,6 @@
+"
+I am a unit test class verifying the serialization of OpenPonk UML models into XMI documents. I test property formatting, reference handling, and the serialization of applied profiles.
+"
 Class {
 	#name : 'OPUMLXMIWriterTest',
 	#superclass : 'TestCase',

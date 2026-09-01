@@ -1,3 +1,6 @@
+"
+I am a unit test class verifying the deserialization of UML XMI documents. I test element instantiation, cross-reference resolution, primitive types, and generalization processing.
+"
 Class {
 	#name : 'OPUMLXMIReaderTest',
 	#superclass : 'TestCase',

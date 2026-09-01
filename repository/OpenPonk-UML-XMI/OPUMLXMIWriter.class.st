@@ -1,3 +1,6 @@
+"
+I serialize OpenPonk UML model instances into standard UML 2.x XMI documents. I manage reference resolution, property formatting, identifier generation, and stereotype serialization.
+"
 Class {
 	#name : 'OPUMLXMIWriter',
 	#superclass : 'Object',
@@ -37,7 +40,7 @@ OPUMLXMIWriter >> accessorNameFor: aProperty [
 	^ name
 ]
 
-{ #category : 'utility' }
+{ #category : 'utilities' }
 OPUMLXMIWriter >> asPlural: aString [
 	(aString endsWith: 's')
 		ifTrue: [ ^ aString , 'es' ].
@@ -46,7 +49,7 @@ OPUMLXMIWriter >> asPlural: aString [
 	^ aString , 's'
 ]
 
-{ #category : 'utility' }
+{ #category : 'utilities' }
 OPUMLXMIWriter >> asSingular: aString [
 	(aString endsWith: 'ses')
 		ifTrue: [ ^ aString withoutSuffix: 'es' ].
