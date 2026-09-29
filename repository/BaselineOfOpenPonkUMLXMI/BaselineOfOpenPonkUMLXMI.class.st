@@ -13,10 +13,10 @@ BaselineOfOpenPonkUMLXMI >> baseline: spec [
 	<baseline>
 	spec
 		for: #common
-		do: [ spec baseline: 'OpenPonkXMI' with: [ spec repository: 'github://openponk/xmi:v4.1.x' ].
+		do: [ spec baseline: 'OpenPonkXMI' with: [ spec repository: 'github://openponk/xmi:v5.0.0' ].
 			spec
 				baseline: 'OpenPonkUMLMetamodel'
-				with: [ spec repository: 'github://openponk/uml-metamodel:v4.1.x' ].
+				with: [ spec repository: 'github://openponk/uml-metamodel:v5.0.0' ].
 			spec package: 'OpenPonk-UML-XMI' with: [ spec requires: #('OpenPonkXMI' 'OpenPonkUMLMetamodel') ].
 			spec group: 'default' with: #('OpenPonk-UML-XMI') ]
 ]
