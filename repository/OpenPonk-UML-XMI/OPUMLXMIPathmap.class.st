@@ -1,3 +1,6 @@
+"
+I manage URI and path mappings for resolving external references (hrefs) during XMI deserialization. I map standard pathmap identifiers to local or remote resources.
+"
 Class {
 	#name : 'OPUMLXMIPathmap',
 	#superclass : 'Object',

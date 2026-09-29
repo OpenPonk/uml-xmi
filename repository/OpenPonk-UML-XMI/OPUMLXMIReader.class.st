@@ -1,3 +1,6 @@
+"
+I deserialize XMI documents into OpenPonk UML model instances. I handle object instantiation, property assignment, reference resolution, and stereotype application.
+"
 Class {
 	#name : 'OPUMLXMIReader',
 	#superclass : 'Object',

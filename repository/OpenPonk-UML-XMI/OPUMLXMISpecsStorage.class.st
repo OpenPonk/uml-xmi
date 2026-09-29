@@ -1,3 +1,6 @@
+"
+I provide local caching and retrieval of standard OMG UML specifications and primitive types (e.g., UML.xmi). I resolve standard metaclasses and primitive types utilized during XMI processing.
+"
 Class {
 	#name : 'OPUMLXMISpecsStorage',
 	#superclass : 'Object',
@@ -100,7 +103,7 @@ OPUMLXMISpecsStorage class >> primitivesMetamodel [
 	^ PrimitivesMetaModel
 ]
 
-{ #category : 'actions' }
+{ #category : 'class initialization' }
 OPUMLXMISpecsStorage class >> reset [
 
 	<script>
