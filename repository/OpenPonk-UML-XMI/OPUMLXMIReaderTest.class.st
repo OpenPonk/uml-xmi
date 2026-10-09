@@ -406,6 +406,33 @@ OPUMLXMIReaderTest >> testReadImportedType [
 ]
 
 { #category : 'tests' }
+OPUMLXMIReaderTest >> testReadOldPackageWithDuplicatedGeneralizationNormalizesPackagedElements [
+	| xmlString package childClass parentClass generalization |
+	xmlString := '<?xml version="1.0" encoding="UTF-8"?>
+<xmi:XMI xmlns:uml="http://www.omg.org/spec/UML/20110701" xmlns:xmi="http://www.omg.org/spec/XMI/20110701">
+	<uml:Package xmi:type="uml:Package" xmi:id="pkg-id" name="LegacyPackage">
+		<packagedElement xmi:type="uml:Class" xmi:id="child-id" name="ChildClass">
+			<generalization xmi:type="uml:Generalization" xmi:id="gen-id" general="parent-id"/>
+		</packagedElement>
+		<packagedElement xmi:type="uml:Class" xmi:id="parent-id" name="ParentClass"/>
+		<packagedElement xmi:type="uml:Generalization" xmi:id="gen-id" general="parent-id"/>
+	</uml:Package>
+</xmi:XMI>'.
+
+	package := OPUMLXMIReader readFrom: xmlString readStream.
+	childClass := package packagedElements detect: [ :eachElement | eachElement name = 'ChildClass' ].
+	parentClass := package packagedElements detect: [ :eachElement | eachElement name = 'ParentClass' ].
+
+	self assert: childClass generalizations isNotEmpty
+		description: 'Child class must contain the generalization relationship'.
+	generalization := childClass generalizations first.
+	self assert: generalization general equals: parentClass.
+
+	self deny: (package packagedElements anySatisfy: [ :eachElement | eachElement oclIsKindOf: #Generalization ])
+		description: 'Legacy generalization inside packagedElements must be normalized and excluded from package elements'
+]
+
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testReadPrimitiveType [
 	| result property |
 	property := (self metaClassNamed: #Class) allAttributes

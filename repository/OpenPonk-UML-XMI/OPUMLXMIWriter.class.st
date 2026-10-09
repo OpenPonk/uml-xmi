@@ -68,6 +68,22 @@ OPUMLXMIWriter >> classPrefix: anObject [
 	classPrefix := anObject
 ]
 
+{ #category : 'writing' }
+OPUMLXMIWriter >> collectProfilesFrom: aModelElement into: aProfileSet visited: aVisitedSet [
+
+	(aVisitedSet includes: aModelElement) ifTrue: [ ^ self ].
+	aVisitedSet add: aModelElement.
+	(aModelElement oclIsKindOf: #Package) ifTrue: [
+			aModelElement profileApplications do: [ :eachApplication |
+				eachApplication appliedProfile ifNotNil: [ :eachProfile | aProfileSet add: eachProfile ] ] ].
+	(aModelElement oclIsKindOf: #Element) ifFalse: [ ^ self ].
+	aModelElement appliedStereotypes do: [ :eachStereotype |
+			eachStereotype umlMetaClass ifNotNil: [ :eachMetadata |
+				eachMetadata profile ifNotNil: [ :eachProfile | aProfileSet add: eachProfile ] ] ].
+	aModelElement ownedElements do: [ :eachChildElement |
+		self collectProfilesFrom: eachChildElement into: aProfileSet visited: aVisitedSet ]
+]
+
 { #category : 'accessing' }
 OPUMLXMIWriter >> defaultClassPrefix [
 	^ 'OPUML'
@@ -108,27 +124,36 @@ OPUMLXMIWriter >> primitiveTypesUri [
 
 { #category : 'writing' }
 OPUMLXMIWriter >> processStereotype: aStereotype of: anElement [
-	| element containedItems stereoMeta properties |
-	element := OPXMIObjectElement new.
+	| stereotypeElement containedItems stereotypeMetadata baseProperties matchingBaseProperty |
+	stereotypeElement := OPXMIObjectElement new.
 	containedItems := OrderedCollection new.
-	element containedItems: containedItems.
-	stereoMeta := aStereotype umlMetaClass.
-	element xmiName: stereoMeta profile name , ':' , stereoMeta name.
+	stereotypeElement containedItems: containedItems.
+	stereotypeMetadata := aStereotype umlMetaClass.
+	stereotypeElement xmiName: stereotypeMetadata profile name , ':' , stereotypeMetadata name.
 	containedItems
 		add:
 			(OPXMIValueAttribute
 				xmiName: 'xmi:id'
 				value: (self idFor: aStereotype)).
-	containedItems
-		add:
-			(OPXMIValueAttribute
-				xmiName: 'base_Element'
-				value: (self idFor: anElement)).
-	properties := stereoMeta allAttributes asArray.
-	properties
-		do:
-			[ :each | containedItems addAll: (self writeProperty: each of: aStereotype) ].
-	stereotypes add: element
+	baseProperties := stereotypeMetadata allAttributes select: [ :eachProperty |
+		eachProperty name beginsWith: 'base_' ].
+	matchingBaseProperty := baseProperties
+		detect: [ :eachProperty |
+			eachProperty type isNotNil and: [ anElement oclIsKindOf: eachProperty type name ] ]
+		ifNone: [
+			baseProperties
+				ifNotEmpty: [ :propertiesCollection | propertiesCollection first ]
+				ifEmpty: [ nil ] ].
+	matchingBaseProperty ifNotNil: [ :propertyDefinition |
+		containedItems
+			add:
+				(OPXMIValueAttribute
+					xmiName: propertyDefinition name
+					value: (self idFor: anElement)) ].
+	(stereotypeMetadata allAttributes reject: [ :eachProperty |
+		eachProperty name beginsWith: 'base_' ]) do: [ :eachProperty |
+			containedItems addAll: (self writeProperty: eachProperty of: aStereotype) ].
+	stereotypes add: stereotypeElement
 ]
 
 { #category : 'writing' }
@@ -166,23 +191,38 @@ OPUMLXMIWriter >> resolvedStereotypes [
 
 { #category : 'writing' }
 OPUMLXMIWriter >> umlUri [
-	^ 'http://www.omg.org/spec/UML/20110701'
+
+	^ 'http://www.omg.org/spec/UML/20131001' "UML 2.5"
 ]
 
 { #category : 'writing' }
 OPUMLXMIWriter >> write: anElement [
-	| document rootElement |
+	| document rootElement appliedProfiles profileNamespaces profileAttributes |
 	unresolved := OrderedCollection new.
 	identityCache := IdentityDictionary new.
 	document := OPXMIObjectElement new.
 	document xmiName: 'xmi:XMI'.
 	rootElement := self writeElement: anElement.
 	rootElement xmiName: 'uml:' , anElement umlMetaClass name.
+
+	appliedProfiles := Set new.
+	self collectProfilesFrom: anElement into: appliedProfiles visited: IdentitySet new.
+
+	profileNamespaces := Dictionary new.
+	appliedProfiles do: [ :eachProfile |
+		(eachProfile name isNotNil and: [ eachProfile URI isNotNil ]) ifTrue: [
+			profileNamespaces at: eachProfile name put: eachProfile URI ] ].
+	profileAttributes := profileNamespaces keys sorted collect: [ :eachNamespacePrefix |
+		OPXMIValueAttribute
+			xmiName: 'xmlns:' , eachNamespacePrefix
+			value: (profileNamespaces at: eachNamespacePrefix) ].
+
 	document
 		containedItems:
-			{OPXMIValueAttribute xmiName: 'xmlns:uml' value: 'http://www.omg.org/spec/UML/20110701'.
-			OPXMIValueAttribute xmiName: 'xmlns:xmi' value: 'http://www.omg.org/spec/XMI/20110701'}
-				, {rootElement} , self resolvedStereotypes.
+			{OPXMIValueAttribute xmiName: 'xmlns:uml' value: self umlUri.
+			OPXMIValueAttribute xmiName: 'xmlns:xmi' value: 'http://www.omg.org/spec/XMI/20131001'}
+				, profileAttributes asArray
+				, {rootElement} , self resolvedStereotypes asArray.
 	self resolveReferences.
 	^ document
 ]
@@ -279,25 +319,30 @@ OPUMLXMIWriter >> writePrimitiveProperty: aProperty value: aValue of: anElement 
 
 { #category : 'writing' }
 OPUMLXMIWriter >> writeProperty: aProperty of: anElement [
-	| accessor value |
-	accessor := self accessorNameFor: aProperty.
+	| accessorName propertyValue |
+	accessorName := self accessorNameFor: aProperty.
 	aProperty isDerived
 		ifTrue: [ ^ #() ].
-	value := anElement perform: accessor asSymbol.
-	(value isNil or: [ value isCollection and: [ value isEmpty ] ])
+	propertyValue := anElement perform: accessorName asSymbol.
+	(propertyValue isNil or: [ propertyValue isCollection and: [ propertyValue isEmpty ] ])
 		ifTrue: [ ^ #() ].
+	((aProperty name = 'packagedElement') and: [ anElement oclIsKindOf: #Package ])
+		ifTrue: [
+			propertyValue := propertyValue select: [ :eachElement |
+				eachElement oclIsKindOf: #PackageableElement ].
+			propertyValue ifEmpty: [ ^ #() ] ].
 	(aProperty type oclIsKindOf: #PrimitiveType)
-		ifTrue: [ ^ self writePrimitiveProperty: aProperty value: value of: anElement ].
+		ifTrue: [ ^ self writePrimitiveProperty: aProperty value: propertyValue of: anElement ].
 	(aProperty type oclIsKindOf: #Enumeration)
-		ifTrue: [ ^ self writeEnumerationProperty: aProperty value: value of: anElement ].
+		ifTrue: [ ^ self writeEnumerationProperty: aProperty value: propertyValue of: anElement ].
 	(aProperty name = #type and: [ (anElement oclIsKindOf: #TypedElement) ])
-		ifTrue: [ ^ self writeTypeProperty: aProperty value: value of: anElement ].
+		ifTrue: [ ^ self writeTypeProperty: aProperty value: propertyValue of: anElement ].
 	aProperty isComposite
-		ifFalse: [ ^ self writeNonCompositeProperty: aProperty value: value of: anElement ].
+		ifFalse: [ ^ self writeNonCompositeProperty: aProperty value: propertyValue of: anElement ].
 	self assert: [ aProperty isComposite ].
 	aProperty name = 'metamodelReference'
-		ifTrue: [ ^ self writeNonCompositeProperty: aProperty value: value of: anElement ].
-	^ self writeCompositeProperty: aProperty value: value of: anElement
+		ifTrue: [ ^ self writeNonCompositeProperty: aProperty value: propertyValue of: anElement ].
+	^ self writeCompositeProperty: aProperty value: propertyValue of: anElement
 ]
 
 { #category : 'writing' }

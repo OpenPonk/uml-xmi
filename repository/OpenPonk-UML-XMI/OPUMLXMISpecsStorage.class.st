@@ -133,12 +133,33 @@ OPUMLXMISpecsStorage class >> umlMetamodel [
 
 { #category : 'accessing' }
 OPUMLXMISpecsStorage >> at: aUrl [
-	^ storage at: aUrl ifAbsentPut: [ self retrieveSpecsFor: aUrl ]
+	| relativePath localDir localFile content |
+	relativePath := self relativePathForUrl: aUrl.
+	
+	localDir := self specsLocalDirectory.
+	localDir ifNotNil: [
+		localFile := localDir resolve: relativePath.
+		localFile exists ifTrue: [ ^ localFile contents ] ].
+
+	content := self retrieveSpecsFor: aUrl.
+	[ self cacheLocally: content forRelativePath: relativePath ]
+		on: Error
+		do: [ :ex | "Zápis do cache selhal (např. read-only fs), pokračovat s obsahem" ].
+	^ content
 ]
 
 { #category : 'accessing' }
 OPUMLXMISpecsStorage >> baseUrl [
 	^ 'https://raw.githubusercontent.com/OpenPonk/specs-repository/master/'
+]
+
+{ #category : 'private' }
+OPUMLXMISpecsStorage >> cacheLocally: aString forRelativePath: aRelativePath [
+	| targetFile |
+	targetFile := (FileLocator imageDirectory / 'specs') resolve: aRelativePath.
+	targetFile parent ensureCreateDirectory.
+	targetFile ensureDelete.
+	targetFile writeStreamDo: [ :stream | stream nextPutAll: aString ]
 ]
 
 { #category : 'initialization' }
@@ -147,30 +168,39 @@ OPUMLXMISpecsStorage >> initialize [
 	storage := Dictionary new
 ]
 
-{ #category : 'actions' }
-OPUMLXMISpecsStorage >> retrieveSpecsFor: aUrl [
-
-	| segments specs |
+{ #category : 'private' }
+OPUMLXMISpecsStorage >> relativePathForUrl: aUrl [
+	| segments |
 	segments := aUrl asZnUrl segments.
 	(segments beginsWithAnyOf: #( #( spec UML ) #( spec DD ) )) ifFalse: [ 
-		^ self error: 'Urls like ' , aUrl , ' are not handled yet.' ].
-	specs := [ :job | 
-	         | response |
-	         job title: 'Downloading specs from ' , self baseUrl.
-	         response := ZnEasy get:
-		                     self baseUrl , 'UML/20131001/' , segments last.
-	         job currentValue: 50.
-	         response entity readStream contents ] asJob run.
+		self error: 'Urls like ' , aUrl asString , ' are not handled yet.' ].
+	^ (segments second = 'UML')
+		ifTrue: [ 'UML/20131001/' , segments last ]
+		ifFalse: [ 'DD/20131001/' , segments last ]
+]
 
+{ #category : 'retrieving' }
+OPUMLXMISpecsStorage >> retrieveSpecsFor: aUrl [
+	| relativePath |
+	relativePath := self relativePathForUrl: aUrl.
 	^ [ :bar | 
-	  bar title: 'Downloading specs from ' , self baseUrl.
-	  [ 
-	  ZnClient new
-		  url: self baseUrl , 'UML/20131001/' , segments last;
-		  signalProgress: true;
-		  get ]
-		  on: HTTPProgress
-		  do: [ :progress | 
-			  progress isEmpty ifFalse: [ bar current: progress percentage ].
-			  progress resume ] ] asJob run
+		bar title: 'Downloading specs from ' , self baseUrl.
+		[ 
+			ZnClient new
+				url: self baseUrl , relativePath;
+				signalProgress: true;
+				get ]
+			on: HTTPProgress
+			do: [ :progress | 
+				progress isEmpty ifFalse: [ bar current: progress percentage ].
+				progress resume ] ] asJob run
+]
+
+{ #category : 'accessing' }
+OPUMLXMISpecsStorage >> specsLocalDirectory [
+	| dir |
+	dir := FileLocator imageDirectory / 'specs'.
+	^ (dir exists and: [ dir isDirectory ])
+		ifTrue: [ dir ]
+		ifFalse: [ nil ]
 ]
