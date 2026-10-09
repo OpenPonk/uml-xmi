@@ -12,6 +12,21 @@ Class {
 	#tag : 'Tests'
 }
 
+{ #category : 'helpers' }
+OPUMLXMIWriterTest >> createClassStereotype [
+	| profile classMetaclass stereotypePair stereotype |
+	profile := OPUMLProfile new
+		name: 'TestProfile';
+		uuid: 'profileId';
+		URI: 'http://www.example.com/TestProfile'.
+	classMetaclass := OPUMLClass new name: 'Class'.
+	stereotypePair := self newStereotype: #TestStereotype to: classMetaclass.
+	profile packagedElements addAll: stereotypePair.
+	stereotype := stereotypePair first.
+	stereotype profile: profile.
+	^ stereotype
+]
+
 { #category : 'instance creation' }
 OPUMLXMIWriterTest >> createTestProfile [
 	| profile elementMetaclass associationMetaclass issueTag importedPackage packageImport |
@@ -200,29 +215,33 @@ OPUMLXMIWriterTest >> testWritePackageExcludesNonPackageableElements [
 
 { #category : 'tests - stereotypes' }
 OPUMLXMIWriterTest >> testWriteStereotypeFallbackWhenBasePropertyTypeDoesNotMatch [
-	| profile stereotypeClass classElement |
-	profile := OntoUMLProfileFactory profile.
-	stereotypeClass := (profile ownedStereotype detect: [ :eachStereotype | eachStereotype name = 'Material' ]) implementationClass.
-	classElement := OPUMLClass new
-		name: 'TestClass';
-		uuid: 'testClassId'.
-	classElement appliedStereotypes add: stereotypeClass new.
-	writer write: classElement
+	| stereotype stereotypeInstance associationElement |
+	stereotype := self createClassStereotype.
+	stereotypeInstance := OPUMLTestStereotype new
+		umlMetaClass: stereotype;
+		uuid: 'stereotypeInstanceId'.
+	associationElement := OPUMLAssociation new
+		name: 'TestAssociation';
+		uuid: 'testAssocId'.
+	associationElement appliedStereotypes add: stereotypeInstance.
+	writer write: associationElement
 ]
 
 { #category : 'tests - stereotypes' }
 OPUMLXMIWriterTest >> testWriteStereotypeUsesSpecificBaseAttribute [
-	| profile stereotypeClass classElement document stereotypeElements |
-	profile := OntoUMLProfileFactory profile.
-	stereotypeClass := (profile ownedStereotype detect: [ :eachStereotype | eachStereotype name = 'Kind' ]) implementationClass.
+	| stereotype stereotypeInstance classElement document stereotypeElements |
+	stereotype := self createClassStereotype.
+	stereotypeInstance := OPUMLTestStereotype new
+		umlMetaClass: stereotype;
+		uuid: 'stereotypeInstanceId'.
 	classElement := OPUMLClass new
 		name: 'Person';
 		uuid: 'personId'.
-	classElement applyStereotype: stereotypeClass new.
+	classElement appliedStereotypes add: stereotypeInstance.
 
 	document := writer write: classElement.
 	stereotypeElements := document containedItems select: [ :eachItem |
-		eachItem isObjectElement and: [ eachItem xmiName = 'OntoUML:Kind' ] ].
+		eachItem isObjectElement and: [ eachItem xmiName = 'TestProfile:TestStereotype' ] ].
 	self assert: stereotypeElements isNotEmpty.
 	self assert: (stereotypeElements first containedItems anySatisfy: [ :eachAttribute |
 		eachAttribute isAttribute and: [ eachAttribute xmiName = 'base_Element' ] ]) not

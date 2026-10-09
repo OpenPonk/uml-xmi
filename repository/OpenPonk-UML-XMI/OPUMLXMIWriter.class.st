@@ -150,8 +150,9 @@ OPUMLXMIWriter >> processStereotype: aStereotype of: anElement [
 				(OPXMIValueAttribute
 					xmiName: propertyDefinition name
 					value: (self idFor: anElement)) ].
-	stereotypeMetadata allAttributes do: [ :eachProperty |
-		containedItems addAll: (self writeProperty: eachProperty of: aStereotype) ].
+	(stereotypeMetadata allAttributes reject: [ :eachProperty |
+		eachProperty name beginsWith: 'base_' ]) do: [ :eachProperty |
+			containedItems addAll: (self writeProperty: eachProperty of: aStereotype) ].
 	stereotypes add: stereotypeElement
 ]
 
