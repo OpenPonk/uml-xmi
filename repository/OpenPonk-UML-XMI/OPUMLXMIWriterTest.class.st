@@ -85,6 +85,11 @@ OPUMLXMIWriterTest >> testClassPrefix [
 	self assert: writer classPrefix equals: 'OPUML'
 ]
 
+{ #category : 'tests' }
+OPUMLXMIWriterTest >> testUmlUriIsUml25 [
+	self assert: writer umlUri equals: 'http://www.omg.org/spec/UML/20131001'
+]
+
 { #category : 'tests - stereotypes' }
 OPUMLXMIWriterTest >> testWriteAppliedProfile [
 	| profile application result property |
@@ -103,6 +108,26 @@ OPUMLXMIWriterTest >> testWriteAppliedProfile [
 		of: application.
 	writer resolveReferences.
 	self assert: result first href equals: 'http://www.example.com/TestProfile#id0'
+]
+
+{ #category : 'tests - stereotypes' }
+OPUMLXMIWriterTest >> testWriteAppliedProfileDeclaresXmlNamespaceInRoot [
+	| profile package document |
+	profile := OPUMLProfile new
+		name: 'TestProfile';
+		uuid: 'profileId';
+		URI: 'http://www.example.com/TestProfile'.
+	package := OPUMLPackage new
+		name: 'RootPackage';
+		uuid: 'packageId'.
+	package profileApplications add: (OPUMLProfileApplication new
+		uuid: 'applicationId';
+		appliedProfile: profile).
+
+	document := writer write: package.
+	self assert: (document containedItems anySatisfy: [ :eachItem |
+		eachItem isAttribute and: [ eachItem xmiName = 'xmlns:TestProfile' and: [ eachItem value = profile URI ] ] ])
+		description: 'Root xmi:XMI element must declare xmlns for applied profiles'
 ]
 
 { #category : 'tests' }
@@ -149,6 +174,62 @@ OPUMLXMIWriterTest >> testWriteMetamodelTypeProperty [
 	result := writer writeTypeProperty: property value: comment of: element.
 	writer resolveReferences.
 	self assert: result first referencedElement equals: nil
+]
+
+{ #category : 'tests' }
+OPUMLXMIWriterTest >> testWritePackageExcludesNonPackageableElements [
+	| pkg cls1 cls2 gen xmiDoc pkgElement packagedElementItems |
+	pkg := OPUMLPackage new name: 'Pkg'.
+	cls1 := OPUMLClass new name: 'C1'.
+	cls2 := OPUMLClass new name: 'C2'.
+	gen := OPUMLGeneralization new general: cls2; specific: cls1.
+	"Simulace poškozeného modelu v paměti"
+	pkg packagedElements add: cls1; add: cls2; add: gen.
+
+	xmiDoc := writer write: pkg.
+	pkgElement := xmiDoc containedItems detect: [ :each |
+		each isObjectElement and: [ each xmiName = 'uml:Package' ] ].
+	packagedElementItems := pkgElement containedItems select: [ :each |
+		each isObjectElement and: [ each xmiName = 'packagedElement' ] ].
+
+	self deny: (packagedElementItems anySatisfy: [ :each |
+		(each containedItems anySatisfy: [ :attr |
+			attr isAttribute and: [ attr xmiName = 'xmi:type' and: [ attr value = 'uml:Generalization' ] ] ]) ])
+		description: 'Generalization must never be exported as a packagedElement'
+]
+
+{ #category : 'tests - stereotypes' }
+OPUMLXMIWriterTest >> testWriteStereotypeFallbackWhenBasePropertyTypeDoesNotMatch [
+	| profile stereotypeClass classElement |
+	profile := OntoUMLProfileFactory profile.
+	stereotypeClass := (profile ownedStereotype detect: [ :eachStereotype | eachStereotype name = 'Material' ]) implementationClass.
+	classElement := OPUMLClass new
+		name: 'TestClass';
+		uuid: 'testClassId'.
+	classElement appliedStereotypes add: stereotypeClass new.
+	writer write: classElement
+]
+
+{ #category : 'tests - stereotypes' }
+OPUMLXMIWriterTest >> testWriteStereotypeUsesSpecificBaseAttribute [
+	| profile stereotypeClass classElement document stereotypeElements |
+	profile := OntoUMLProfileFactory profile.
+	stereotypeClass := (profile ownedStereotype detect: [ :eachStereotype | eachStereotype name = 'Kind' ]) implementationClass.
+	classElement := OPUMLClass new
+		name: 'Person';
+		uuid: 'personId'.
+	classElement applyStereotype: stereotypeClass new.
+
+	document := writer write: classElement.
+	stereotypeElements := document containedItems select: [ :eachItem |
+		eachItem isObjectElement and: [ eachItem xmiName = 'OntoUML:Kind' ] ].
+	self assert: stereotypeElements isNotEmpty.
+	self assert: (stereotypeElements first containedItems anySatisfy: [ :eachAttribute |
+		eachAttribute isAttribute and: [ eachAttribute xmiName = 'base_Element' ] ]) not
+		description: 'Stereotype must not use generic base_Element attribute'.
+	self assert: (stereotypeElements first containedItems anySatisfy: [ :eachAttribute |
+		eachAttribute isAttribute and: [ eachAttribute xmiName = 'base_Class' ] ])
+		description: 'Stereotype on Class must use base_Class attribute'
 ]
 
 { #category : 'tests' }
