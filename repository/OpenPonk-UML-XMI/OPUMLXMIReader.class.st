@@ -187,14 +187,17 @@ OPUMLXMIReader >> readMofItem: anItem property: aProperty [
 
 { #category : 'reading' }
 OPUMLXMIReader >> readProfileItem: anItem property: aProperty [
-	| parts factory |
-	parts := anItem href splitOn: '#'.
+	| uri factory |
+	uri := (anItem href splitOn: '#') first.
 	self class environment
 		at: #OPUmlCustomProfile
 		ifPresent: [ :cls | 
 			factory := cls allSubclasses
-				detect: [ :each | each profile URI = parts first ]
-				ifNone: [ self error: 'No profile with URI ' , parts first , ' found' ] ]
+				detect: [ :each | 
+					(each respondsTo: #matchesURI:)
+						ifTrue: [ each matchesURI: uri ]
+						ifFalse: [ each profile URI = uri ] ]
+				ifNone: [ self error: 'No profile with URI ' , uri , ' found' ] ]
 		ifAbsent: [  ].
 	^ factory profile
 ]
