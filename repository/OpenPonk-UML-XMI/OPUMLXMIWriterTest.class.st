@@ -215,7 +215,7 @@ OPUMLXMIWriterTest >> testWritePackageExcludesNonPackageableElements [
 
 { #category : 'tests - stereotypes' }
 OPUMLXMIWriterTest >> testWriteStereotypeFallbackWhenBasePropertyTypeDoesNotMatch [
-	| stereotype stereotypeInstance associationElement |
+	| stereotype stereotypeInstance associationElement xmi |
 	stereotype := self createClassStereotype.
 	stereotypeInstance := OPUMLTestStereotype new
 		umlMetaClass: stereotype;
@@ -224,30 +224,35 @@ OPUMLXMIWriterTest >> testWriteStereotypeFallbackWhenBasePropertyTypeDoesNotMatc
 		name: 'TestAssociation';
 		uuid: 'testAssocId'.
 	associationElement appliedStereotypes add: stereotypeInstance.
-	writer write: associationElement
+	xmi := writer write: associationElement.
+	self assert: xmi isNotNil.
+	self denyEmpty: xmi containedItems
 ]
 
 { #category : 'tests - stereotypes' }
 OPUMLXMIWriterTest >> testWriteStereotypeUsesSpecificBaseAttribute [
+
 	| stereotype stereotypeInstance classElement document stereotypeElements |
 	stereotype := self createClassStereotype.
 	stereotypeInstance := OPUMLTestStereotype new
-		umlMetaClass: stereotype;
-		uuid: 'stereotypeInstanceId'.
+		                      umlMetaClass: stereotype;
+		                      uuid: 'stereotypeInstanceId'.
 	classElement := OPUMLClass new
-		name: 'Person';
-		uuid: 'personId'.
+		                name: 'Person';
+		                uuid: 'personId'.
 	classElement appliedStereotypes add: stereotypeInstance.
 
 	document := writer write: classElement.
 	stereotypeElements := document containedItems select: [ :eachItem |
-		eachItem isObjectElement and: [ eachItem xmiName = 'TestProfile:TestStereotype' ] ].
-	self assert: stereotypeElements isNotEmpty.
-	self assert: (stereotypeElements first containedItems anySatisfy: [ :eachAttribute |
-		eachAttribute isAttribute and: [ eachAttribute xmiName = 'base_Element' ] ]) not
+		                      eachItem isObjectElement and: [ eachItem xmiName = 'TestProfile:TestStereotype' ] ].
+	self denyEmpty: stereotypeElements.
+	self
+		assert: (stereotypeElements first containedItems anySatisfy: [ :eachAttribute |
+				 eachAttribute isAttribute and: [ eachAttribute xmiName = 'base_Element' ] ]) not
 		description: 'Stereotype must not use generic base_Element attribute'.
-	self assert: (stereotypeElements first containedItems anySatisfy: [ :eachAttribute |
-		eachAttribute isAttribute and: [ eachAttribute xmiName = 'base_Class' ] ])
+	self
+		assert: (stereotypeElements first containedItems anySatisfy: [ :eachAttribute |
+				 eachAttribute isAttribute and: [ eachAttribute xmiName = 'base_Class' ] ])
 		description: 'Stereotype on Class must use base_Class attribute'
 ]
 

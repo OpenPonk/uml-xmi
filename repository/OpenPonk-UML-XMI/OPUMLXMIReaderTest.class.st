@@ -216,9 +216,9 @@ OPUMLXMIReaderTest >> property: aPropertyName in: aContainerClass [
 
 { #category : 'running' }
 OPUMLXMIReaderTest >> setUp [
+	super setUp.
 	reader := OPUMLXMIReader new.
-	packagedElementProperty := (OPUMLXMISpecsStorage metaClassFor: OPUMLPackage new)
-		ownedAttributes detect: [ :each | each name = 'packagedElement' ]
+	packagedElementProperty := self property: #packagedElement in: OPUMLPackage new
 ]
 
 { #category : 'tests' }
@@ -241,15 +241,14 @@ OPUMLXMIReaderTest >> testAmbiguousPackageImport [
 
 { #category : 'tests' }
 OPUMLXMIReaderTest >> testAssociation [
+
 	| result |
 	result := reader readItem: self association property: packagedElementProperty.
 	self assert: result umlClassName equals: #Association.
 	self assert: result memberEnds size equals: 2.
-	self
-		assert: (result memberEnds collect: #name) asArray sorted
-		equals: #('annotatedElement' 'comment') sorted.
-	self assert: (result ownedEnds collect: #name) asArray equals: #('comment').
-	self assert: (result memberEnds includes: result ownedEnds first)
+	self assert: (result memberEnds collect: #name) asArray sorted equals: #( 'annotatedElement' 'comment' ) sorted.
+	self assert: (result ownedEnds collect: #name) asArray equals: #( 'comment' ).
+	self assertCollection: result memberEnds includesAll: { result ownedEnds first }
 ]
 
 { #category : 'tests - reading - value' }
