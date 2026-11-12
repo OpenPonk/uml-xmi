@@ -5,9 +5,9 @@ Class {
 		'umlMetaClass',
 		'uuid'
 	],
-	#category : 'OpenPonk-UML-XMI-Tests',
-	#package : 'OpenPonk-UML-XMI',
-	#tag : 'Tests'
+	#category : 'OpenPonk-UML-XMI-Tests-Utility',
+	#package : 'OpenPonk-UML-XMI-Tests',
+	#tag : 'Utility'
 }
 
 { #category : 'reflective operations' }

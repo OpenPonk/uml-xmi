@@ -7,9 +7,9 @@ Class {
 	#instVars : [
 		'writer'
 	],
-	#category : 'OpenPonk-UML-XMI-Tests',
-	#package : 'OpenPonk-UML-XMI',
-	#tag : 'Tests'
+	#category : 'OpenPonk-UML-XMI-Tests-Writer',
+	#package : 'OpenPonk-UML-XMI-Tests',
+	#tag : 'Writer'
 }
 
 { #category : 'helpers' }

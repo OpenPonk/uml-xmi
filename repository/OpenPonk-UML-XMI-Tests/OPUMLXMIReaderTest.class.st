@@ -8,9 +8,9 @@ Class {
 		'reader',
 		'packagedElementProperty'
 	],
-	#category : 'OpenPonk-UML-XMI-Tests',
-	#package : 'OpenPonk-UML-XMI',
-	#tag : 'Tests'
+	#category : 'OpenPonk-UML-XMI-Tests-Reader',
+	#package : 'OpenPonk-UML-XMI-Tests',
+	#tag : 'Reader'
 }
 
 { #category : 'instance creation' }
