@@ -232,11 +232,9 @@ OPUMLXMIReaderTest >> testAmbiguousPackageImport [
 	activitiesPkg := masterPkg packageImports first importedPackage.
 	classificationPkg := masterPkg packageImports second importedPackage.
 	self assert: classificationPkg name equals: 'Classification'.
-	self assert: classificationPkg packageImports asArray equals: #().
+	self assertEmpty: classificationPkg packageImports.
 	self assert: activitiesPkg name equals: 'Activities'.
-	self
-		assert: activitiesPkg packageImports first importedPackage
-		equals: classificationPkg
+	self assert: activitiesPkg packageImports first importedPackage identicalTo: classificationPkg
 ]
 
 { #category : 'tests' }
@@ -245,9 +243,8 @@ OPUMLXMIReaderTest >> testAssociation [
 	| result |
 	result := reader readItem: self association property: packagedElementProperty.
 	self assert: result umlClassName equals: #Association.
-	self assert: result memberEnds size equals: 2.
-	self assert: (result memberEnds collect: #name) asArray sorted equals: #( 'annotatedElement' 'comment' ) sorted.
-	self assert: (result ownedEnds collect: #name) asArray equals: #( 'comment' ).
+	self assertCollection: (result memberEnds collect: #name as: Array) hasSameElements: #( 'annotatedElement' 'comment' ).
+	self assert: (result ownedEnds collect: #name as: Array) equals: #( 'comment' ).
 	self assertCollection: result memberEnds includesAll: { result ownedEnds first }
 ]
 
@@ -262,11 +259,12 @@ OPUMLXMIReaderTest >> testBooleanStringValue [
 
 { #category : 'tests - reading - value' }
 OPUMLXMIReaderTest >> testBooleanValue [
+
 	| result booleanProperty |
-	booleanProperty := (OPUMLXMISpecsStorage metaClassFor: OPUMLProperty new) ownedAttributes
-		detect: [ :each | each name = 'isDerived' ].
+	booleanProperty := (OPUMLXMISpecsStorage metaClassFor: OPUMLProperty new) ownedAttributes detect: [ :each |
+		                   each name = 'isDerived' ].
 	result := reader valueFor: 'true' property: booleanProperty.
-	self assert: result equals: true
+	self assert: result description: 'Boolean property value ''true'' must evaluate to true'
 ]
 
 { #category : 'tests' }
@@ -327,23 +325,25 @@ OPUMLXMIReaderTest >> testGeneralizationElement [
 
 { #category : 'tests' }
 OPUMLXMIReaderTest >> testGroupedChildren [
+
 	| result |
 	result := reader groupedChildrenIn: self multipleNestedAttributes.
-	self assert: result keys sorted equals: #(name ownedAttribute).
-	self assert: (result at: #name) size equals: 1.
-	self assert: (result at: #ownedAttribute) size equals: 2
+	self assert: result keys sorted equals: #( name ownedAttribute ).
+	self assert: ((result at: #name) collect: #value as: Array) equals: #( 'Comment' ).
+	self assert: ((result at: #ownedAttribute) collect: #nameValue as: Array) equals: #( 'annotatedElement' 'body' )
 ]
 
 { #category : 'tests' }
 OPUMLXMIReaderTest >> testInstance [
+
 	| element result1 result2 |
 	element := OPXMIObjectElement new
-		xmiName: 'Package';
-		containedItems: {OPXMIValueElement xmiName: 'xmi:id' value: 'CLS'}.
+		           xmiName: 'Package';
+		           containedItems: { (OPXMIValueElement xmiName: 'xmi:id' value: 'CLS') }.
 	result1 := reader instanceFor: element property: nil.
 	self assert: result1 umlClassName equals: #Package.
 	result2 := reader instanceFor: element property: nil.
-	self assert: result1 == result2 description: 'We expect the same object.'
+	self assert: result1 identicalTo: result2
 ]
 
 { #category : 'tests - reading - value' }
@@ -366,46 +366,45 @@ OPUMLXMIReaderTest >> testIntegerValue [
 
 { #category : 'tests' }
 OPUMLXMIReaderTest >> testMultipleNestedAttributes [
+
 	| result |
 	result := reader readItem: self multipleNestedAttributes property: packagedElementProperty.
 	self assert: result umlClassName equals: #Class.
-	self assert: result ownedAttributes size equals: 2.
-	self assert: result ownedAttributes first name equals: 'annotatedElement'.
-	self assert: result ownedAttributes second name equals: 'body'
+	self assert: (result ownedAttributes collect: #name as: Array) equals: #( 'annotatedElement' 'body' )
 ]
 
 { #category : 'tests' }
 OPUMLXMIReaderTest >> testNestedComplexElement [
+
 	| result |
-	result := reader
-		readItem: self nestedComplexElement
-		property: (self property: 'ownedAttribute' in: OPUMLClass new).
+	result := reader readItem: self nestedComplexElement property: (self property: 'ownedAttribute' in: OPUMLClass new).
 	self assert: result umlClassName equals: #Property.
 	self assert: result upperValue value equals: '*'.
-	"	self assert: result lowerValue value equals: 0."
-	self assert: result lowerValue value equals: nil
+	self assert: result lowerValue value identicalTo: nil
 ]
 
 { #category : 'tests' }
 OPUMLXMIReaderTest >> testReadBoolean [
+
 	| result |
 	result := reader
-		readItem: (OPXMIValueAttribute xmiName: 'isDerived' value: 'true')
-		property: (self property: #isDerived in: OPUMLProperty new).
-	self assert: result equals: true
+		          readItem: (OPXMIValueAttribute xmiName: 'isDerived' value: 'true')
+		          property: (self property: #isDerived in: OPUMLProperty new).
+	self assert: result description: 'Reading Boolean attribute ''true'' must return true'
 ]
 
 { #category : 'tests' }
 OPUMLXMIReaderTest >> testReadImportedType [
+
 	| result property |
-	property := (self metaClassNamed: #Class) allAttributes
-		detect: [ :each | each name = 'ownedAttribute' ].
+	property := (self metaClassNamed: #Class) allAttributes detect: [ :each | each name = 'ownedAttribute' ].
 	result := reader readItem: self attributeWithHrefType property: property.
-	self assert: result type equals: (self metaClassNamed: #Association)
+	self assert: result type identicalTo: (self metaClassNamed: #Association)
 ]
 
 { #category : 'tests' }
 OPUMLXMIReaderTest >> testReadOldPackageWithDuplicatedGeneralizationNormalizesPackagedElements [
+
 	| xmlString package childClass parentClass generalization |
 	xmlString := '<?xml version="1.0" encoding="UTF-8"?>
 <xmi:XMI xmlns:uml="http://www.omg.org/spec/UML/20110701" xmlns:xmi="http://www.omg.org/spec/XMI/20110701">
@@ -422,22 +421,23 @@ OPUMLXMIReaderTest >> testReadOldPackageWithDuplicatedGeneralizationNormalizesPa
 	childClass := package packagedElements detect: [ :eachElement | eachElement name = 'ChildClass' ].
 	parentClass := package packagedElements detect: [ :eachElement | eachElement name = 'ParentClass' ].
 
-	self assert: childClass generalizations isNotEmpty
-		description: 'Child class must contain the generalization relationship'.
+	self denyEmpty: childClass generalizations.
+	self assert: childClass generalizations size equals: 1.
 	generalization := childClass generalizations first.
-	self assert: generalization general equals: parentClass.
-
-	self deny: (package packagedElements anySatisfy: [ :eachElement | eachElement oclIsKindOf: #Generalization ])
-		description: 'Legacy generalization inside packagedElements must be normalized and excluded from package elements'
+	self assert: generalization umlClassName equals: #Generalization.
+	self assert: generalization general identicalTo: parentClass.
+	self assertCollection: package packagedElements hasSameElements: {
+			childClass.
+			parentClass }
 ]
 
 { #category : 'tests' }
 OPUMLXMIReaderTest >> testReadPrimitiveType [
+
 	| result property |
-	property := (self metaClassNamed: #Class) allAttributes
-		detect: [ :each | each name = 'ownedAttribute' ].
+	property := (self metaClassNamed: #Class) allAttributes detect: [ :each | each name = 'ownedAttribute' ].
 	result := reader readItem: self attributeWithPrimitiveType property: property.
-	self assert: result type equals: (self primitiveTypeNamed: #Boolean)
+	self assert: result type identicalTo: (self primitiveTypeNamed: #Boolean)
 ]
 
 { #category : 'tests' }
@@ -455,20 +455,19 @@ OPUMLXMIReaderTest >> testReadSimpleObject [
 
 { #category : 'tests' }
 OPUMLXMIReaderTest >> testReadTrivialXmi [
+
 	| result |
 	result := reader readXmi: self trivialXmi.
-	self assert: result size equals: 1.
-	self assert: result first umlClassName equals: #Package
+	self assert: (result collect: #umlClassName as: Array) equals: #( #Package )
 ]
 
 { #category : 'tests' }
 OPUMLXMIReaderTest >> testReadTrivialishXmi [
+
 	| result |
 	result := reader readXmi: self trivialishXmi.
-	self assert: result size equals: 1.
-	self assert: result first umlClassName equals: #Package.
-	self assert: result first packagedElements size equals: 1.
-	self assert: result first packagedElements first name equals: 'Activities'
+	self assert: (result collect: #umlClassName as: Array) equals: #( #Package ).
+	self assert: (result first packagedElements collect: #name as: Array) equals: #( 'Activities' )
 ]
 
 { #category : 'tests' }
