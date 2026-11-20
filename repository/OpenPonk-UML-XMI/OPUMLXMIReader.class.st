@@ -9,10 +9,25 @@ Class {
 		'instanceCache',
 		'profileFactories'
 	],
+	#classInstVars : [
+		'profileFactoryProviders'
+	],
 	#category : 'OpenPonk-UML-XMI-Reader',
 	#package : 'OpenPonk-UML-XMI',
 	#tag : 'Reader'
 }
+
+{ #category : 'accessing' }
+OPUMLXMIReader class >> defaultProfileFactories [
+
+	^ self profileFactoryProviders values flatCollect: [ :eachProvider | eachProvider value ]
+]
+
+{ #category : 'accessing' }
+OPUMLXMIReader class >> profileFactoryProviders [
+
+	^ profileFactoryProviders ifNil: [ profileFactoryProviders := Dictionary new ]
+]
 
 { #category : 'instance creation' }
 OPUMLXMIReader class >> read: anXmlStream [
@@ -33,6 +48,18 @@ OPUMLXMIReader class >> read: anXmlStream pathmap: aPathmap [
 { #category : 'instance creation' }
 OPUMLXMIReader class >> readFrom: aStream [
 	^ (self new readXmi: (OPXMIReader readFrom: aStream)) first
+]
+
+{ #category : 'accessing' }
+OPUMLXMIReader class >> registerProfileFactoryProvider: aBlock for: aKey [
+
+	self profileFactoryProviders at: aKey put: aBlock
+]
+
+{ #category : 'accessing' }
+OPUMLXMIReader class >> unregisterProfileFactoryProviderFor: aKey [
+
+	self profileFactoryProviders removeKey: aKey ifAbsent: [ ]
 ]
 
 { #category : 'reading' }
@@ -118,10 +145,7 @@ OPUMLXMIReader >> defaultClassPrefix [
 { #category : 'accessing' }
 OPUMLXMIReader >> defaultProfileFactories [
 
-	^ self class environment
-		  at: #OPUmlCustomProfile
-		  ifPresent: [ :profileFactoryClass | profileFactoryClass allSubclasses ]
-		  ifAbsent: [ #(  ) ]
+	^ self class defaultProfileFactories
 ]
 
 { #category : 'reading' }

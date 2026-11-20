@@ -716,6 +716,21 @@ OPUMLXMIReaderTest >> testReferenceElement [
 ]
 
 { #category : 'tests' }
+OPUMLXMIReaderTest >> testRegisterAndUnregisterProfileFactoryProvider [
+
+	| factory key |
+	factory := OPUMLTestProfileFactory new.
+	key := #testProfileFactoryProviderKey.
+	[
+		OPUMLXMIReader registerProfileFactoryProvider: [ { factory } ] for: key.
+		self assertCollection: OPUMLXMIReader defaultProfileFactories includesAll: { factory }.
+		self assertCollection: reader defaultProfileFactories includesAll: { factory }.
+		OPUMLXMIReader unregisterProfileFactoryProviderFor: key.
+		self denyCollection: OPUMLXMIReader defaultProfileFactories includesAny: { factory } ] ensure: [
+		OPUMLXMIReader unregisterProfileFactoryProviderFor: key ]
+]
+
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testUniqueId [
 	| regular packageImport |
 	regular := OPXMIObjectElement new
