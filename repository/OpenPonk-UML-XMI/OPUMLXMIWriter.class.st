@@ -8,7 +8,6 @@ Class {
 		'classPrefix',
 		'identityCache',
 		'unresolved',
-		'metamodelPackagedElements',
 		'umlMetamodel',
 		'stereotypes'
 	],
@@ -47,15 +46,6 @@ OPUMLXMIWriter >> asPlural: aString [
 	(aString endsWith: 'y')
 		ifTrue: [ ^ (aString withoutSuffix: 'y') , 'ies' ].
 	^ aString , 's'
-]
-
-{ #category : 'utilities' }
-OPUMLXMIWriter >> asSingular: aString [
-	(aString endsWith: 'ses')
-		ifTrue: [ ^ aString withoutSuffix: 'es' ].
-	(aString endsWith: 'ies')
-		ifTrue: [ ^ (aString withoutSuffix: 'ies') , 'y' ].
-	^ aString withoutSuffix: 's'
 ]
 
 { #category : 'accessing' }
@@ -114,45 +104,46 @@ OPUMLXMIWriter >> isMetaclass: aClass [
 
 { #category : 'accessing' }
 OPUMLXMIWriter >> metamodelUri [
-	^ umlMetamodel URI , '/' , umlMetamodel name , '.xmi'
+
+	^ String streamContents: [ :stream |
+			  stream << umlMetamodel URI.
+			  stream << '/'.
+			  stream << umlMetamodel name.
+			  stream << '.xmi' ]
 ]
 
 { #category : 'accessing' }
 OPUMLXMIWriter >> primitiveTypesUri [
-	^ umlMetamodel URI , '/' , 'PrimitiveTypes' , '.xmi'
+
+	^ String streamContents: [ :stream |
+			  stream << umlMetamodel URI.
+			  stream << '/PrimitiveTypes.xmi' ]
 ]
 
 { #category : 'writing' }
 OPUMLXMIWriter >> processStereotype: aStereotype of: anElement [
+
 	| stereotypeElement containedItems stereotypeMetadata baseProperties matchingBaseProperty |
 	stereotypeElement := OPXMIObjectElement new.
 	containedItems := OrderedCollection new.
 	stereotypeElement containedItems: containedItems.
 	stereotypeMetadata := aStereotype umlMetaClass.
-	stereotypeElement xmiName: stereotypeMetadata profile name , ':' , stereotypeMetadata name.
-	containedItems
-		add:
-			(OPXMIValueAttribute
-				xmiName: 'xmi:id'
-				value: (self idFor: aStereotype)).
-	baseProperties := stereotypeMetadata allAttributes select: [ :eachProperty |
-		eachProperty name beginsWith: 'base_' ].
+	stereotypeElement xmiName: (String streamContents: [ :stream |
+				 stream << stereotypeMetadata profile name.
+				 stream << ':'.
+				 stream << stereotypeMetadata name ]).
+	containedItems add: (OPXMIValueAttribute xmiName: 'xmi:id' value: (self idFor: aStereotype)).
+	baseProperties := stereotypeMetadata allAttributes select: [ :eachProperty | eachProperty name beginsWith: 'base_' ].
 	matchingBaseProperty := baseProperties
-		detect: [ :eachProperty |
-			eachProperty type isNotNil and: [ anElement oclIsKindOf: eachProperty type name ] ]
-		ifNone: [
-			baseProperties
-				ifNotEmpty: [ :propertiesCollection | propertiesCollection first ]
-				ifEmpty: [ nil ] ].
+		                        detect: [ :eachProperty |
+		                        eachProperty type isNotNil and: [ anElement oclIsKindOf: eachProperty type name ] ]
+		                        ifNone: [
+		                        baseProperties ifNotEmpty: [ :propertiesCollection | propertiesCollection first ] ifEmpty: [ nil ] ].
 	matchingBaseProperty ifNotNil: [ :propertyDefinition |
-		containedItems
-			add:
-				(OPXMIValueAttribute
-					xmiName: propertyDefinition name
-					value: (self idFor: anElement)) ].
-	(stereotypeMetadata allAttributes reject: [ :eachProperty |
-		eachProperty name beginsWith: 'base_' ]) do: [ :eachProperty |
-			containedItems addAll: (self writeProperty: eachProperty of: aStereotype) ].
+		containedItems add: (OPXMIValueAttribute xmiName: propertyDefinition name value: (self idFor: anElement)) ].
+	stereotypeMetadata allAttributes
+		reject: [ :eachProperty | eachProperty name beginsWith: 'base_' ]
+		thenDo: [ :eachProperty | containedItems addAll: (self writeProperty: eachProperty of: aStereotype) ].
 	stereotypes add: stereotypeElement
 ]
 
@@ -197,9 +188,11 @@ OPUMLXMIWriter >> umlUri [
 
 { #category : 'writing' }
 OPUMLXMIWriter >> write: anElement [
+
 	| document rootElement appliedProfiles profileNamespaces profileAttributes |
 	unresolved := OrderedCollection new.
 	identityCache := IdentityDictionary new.
+	stereotypes := OrderedCollection new.
 	document := OPXMIObjectElement new.
 	document xmiName: 'xmi:XMI'.
 	rootElement := self writeElement: anElement.
@@ -210,34 +203,32 @@ OPUMLXMIWriter >> write: anElement [
 
 	profileNamespaces := Dictionary new.
 	appliedProfiles do: [ :eachProfile |
-		(eachProfile name isNotNil and: [ eachProfile URI isNotNil ]) ifTrue: [
-			profileNamespaces at: eachProfile name put: eachProfile URI ] ].
+			(eachProfile name isNotNil and: [ eachProfile URI isNotNil ]) ifTrue: [
+				profileNamespaces at: eachProfile name put: eachProfile URI ] ].
 	profileAttributes := profileNamespaces keys sorted collect: [ :eachNamespacePrefix |
-		OPXMIValueAttribute
-			xmiName: 'xmlns:' , eachNamespacePrefix
-			value: (profileNamespaces at: eachNamespacePrefix) ].
+		                     OPXMIValueAttribute
+			                     xmiName: 'xmlns:' , eachNamespacePrefix
+			                     value: (profileNamespaces at: eachNamespacePrefix) ].
 
-	document
-		containedItems:
-			{OPXMIValueAttribute xmiName: 'xmlns:uml' value: self umlUri.
-			OPXMIValueAttribute xmiName: 'xmlns:xmi' value: 'http://www.omg.org/spec/XMI/20131001'}
-				, profileAttributes asArray
-				, {rootElement} , self resolvedStereotypes asArray.
+	document containedItems: {
+			(OPXMIValueAttribute xmiName: 'xmlns:uml' value: self umlUri).
+			(OPXMIValueAttribute xmiName: 'xmlns:xmi' value: 'http://www.omg.org/spec/XMI/20131001') } , profileAttributes asArray
+		, { rootElement } , self resolvedStereotypes asArray.
 	self resolveReferences.
 	^ document
 ]
 
 { #category : 'writing' }
 OPUMLXMIWriter >> writeCompositeProperty: aProperty value: aValue of: anElement [
+
 	| values |
 	values := aProperty isMultivalued
-		ifTrue: [ values := aValue asArray ]
-		ifFalse: [ values := {aValue} ].
-	^ values
-		collect: [ :each | 
-			| el |
-			el := self writeElement: each.
-			el xmiName: aProperty name ]
+		          ifTrue: [ aValue asArray ]
+		          ifFalse: [ { aValue } ].
+	^ values collect: [ :each |
+			  | element |
+			  element := self writeElement: each.
+			  element xmiName: aProperty name ]
 ]
 
 { #category : 'writing' }
@@ -266,55 +257,55 @@ OPUMLXMIWriter >> writeElement: anElement [
 
 { #category : 'writing' }
 OPUMLXMIWriter >> writeEnumerationProperty: aProperty value: aValue of: anElement [
+
 	| values |
-	(aProperty defaultValue isNotNil and: [ aProperty defaultValue instance name = aValue ])
-		ifTrue: [ ^ #() ].
+	(aProperty defaultValue isNotNil and: [ aProperty defaultValue instance name = aValue ]) ifTrue: [ ^ #(  ) ].
 	values := aProperty isMultivalued
-		ifTrue: [ values := aValue asArray ]
-		ifFalse: [ values := {aValue} ].
+		          ifTrue: [ aValue asArray ]
+		          ifFalse: [ { aValue } ].
 	^ values collect: [ :each | OPXMIValueAttribute xmiName: aProperty name value: each asString ]
 ]
 
 { #category : 'writing' }
 OPUMLXMIWriter >> writeNonCompositeProperty: aProperty value: aValue of: anElement [
+
 	| values referenceItem |
-	(aProperty opposite isNil or: [ aProperty opposite isComposite ])
-		ifTrue: [ ^ #() ].
+	(aProperty opposite isNil or: [ aProperty opposite isComposite ]) ifTrue: [ ^ #(  ) ].
 	values := aProperty isMultivalued
-		ifTrue: [ values := aValue asArray ]
-		ifFalse: [ values := {aValue} ].
-	(values anyOne isKindOf: OPUMLPrimitiveType)
-		ifTrue: [ ^ values
-				collect: [ :each | 
-					(OPXMIReferenceElement xmiName: aProperty name referencedElements: {})
-						xmiType: 'uml:PrimitiveType';
-						href: self primitiveTypesUri, '#', each name ] ].
-	(#(importedPackage appliedProfile) includes: aProperty name)
-		ifTrue: [ referenceItem := OPXMIReferenceElement xmiName: aProperty name referencedElements: {}.
-			unresolved
-				add: [ self assert: [ aProperty isMultivalued not ].
-					identityCache
-						at: values anyOne
-						ifPresent: [ :ref | referenceItem referencedElements: {ref} ]
-						ifAbsent: [ referenceItem href: values anyOne URI , '#' , values anyOne uuid ] ].
-			^ {referenceItem} ].
-	referenceItem := OPXMIReferenceAttribute xmiName: aProperty name referencedElements: {}.
-	unresolved
-		add:
-			[ referenceItem referencedElements: (values collect: [ :each | self referenceFor: each ]) ].
-	^ {referenceItem}
+		          ifTrue: [ aValue asArray ]
+		          ifFalse: [ { aValue } ].
+	(values anyOne isKindOf: OPUMLPrimitiveType) ifTrue: [
+			^ values collect: [ :each |
+					  (OPXMIReferenceElement xmiName: aProperty name referencedElements: {  })
+						  xmiType: 'uml:PrimitiveType';
+						  href: (String streamContents: [ :stream |
+										   stream << self primitiveTypesUri.
+										   stream << '#'.
+										   stream << each name ]) ] ].
+	(#( importedPackage appliedProfile ) includes: aProperty name) ifTrue: [
+			referenceItem := OPXMIReferenceElement xmiName: aProperty name referencedElements: {  }.
+			unresolved add: [
+					self assert: [ aProperty isMultivalued not ].
+					identityCache at: values anyOne ifPresent: [ :ref | referenceItem referencedElements: { ref } ] ifAbsent: [
+							referenceItem href: (String streamContents: [ :stream |
+										 stream << values anyOne URI.
+										 stream << '#'.
+										 stream << (self idFor: values anyOne) ]) ] ].
+			^ { referenceItem } ].
+	referenceItem := OPXMIReferenceAttribute xmiName: aProperty name referencedElements: {  }.
+	unresolved add: [ referenceItem referencedElements: (values collect: [ :each | self referenceFor: each ]) ].
+	^ { referenceItem }
 ]
 
 { #category : 'writing' }
 OPUMLXMIWriter >> writePrimitiveProperty: aProperty value: aValue of: anElement [
+
 	| values |
-	(aProperty defaultValue isNotNil and: [ aProperty defaultValue value = aValue ])
-		ifTrue: [ ^ #() ].
+	(aProperty defaultValue isNotNil and: [ aProperty defaultValue value = aValue ]) ifTrue: [ ^ #(  ) ].
 	values := aProperty isMultivalued
-		ifTrue: [ values := aValue asArray ]
-		ifFalse: [ values := {aValue} ].
-	^ values
-		collect: [ :each | OPXMIValueAttribute xmiName: aProperty name value: each asString ]
+		          ifTrue: [ aValue asArray ]
+		          ifFalse: [ { aValue } ].
+	^ values collect: [ :each | OPXMIValueAttribute xmiName: aProperty name value: each asString ]
 ]
 
 { #category : 'writing' }
@@ -347,11 +338,15 @@ OPUMLXMIWriter >> writeProperty: aProperty of: anElement [
 
 { #category : 'writing' }
 OPUMLXMIWriter >> writeTypeProperty: aProperty value: aValue of: anElement [
+
 	self assert: [ aProperty name = #type ].
-	(self isMetaclass: aValue)
-		ifTrue: [ ^ {OPXMIReferenceElement new
-				xmiName: aProperty name;
-				xmiType: 'uml:' , aValue umlClassName;
-				href: self metamodelUri , '#' , aValue name} ].
+	(self isMetaclass: aValue) ifTrue: [
+			^ { (OPXMIReferenceElement new
+				   xmiName: aProperty name;
+				   xmiType: 'uml:' , aValue umlClassName;
+				   href: (String streamContents: [ :stream |
+								    stream << self metamodelUri.
+								    stream << '#'.
+								    stream << aValue name ])) } ].
 	^ self writeNonCompositeProperty: aProperty value: aValue of: anElement
 ]

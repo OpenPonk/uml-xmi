@@ -6,7 +6,8 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'classPrefix',
-		'instanceCache'
+		'instanceCache',
+		'profileFactories'
 	],
 	#category : 'OpenPonk-UML-XMI-Reader',
 	#package : 'OpenPonk-UML-XMI',
@@ -34,18 +35,15 @@ OPUMLXMIReader class >> readFrom: aStream [
 	^ (self new readXmi: (OPXMIReader readFrom: aStream)) first
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'reading' }
 OPUMLXMIReader >> applyStereotype: anStereotypeXMI outOf: possibleStereotypes to: anElement [
+
 	| stereotype groups |
-	stereotype := (possibleStereotypes at: anStereotypeXMI xmiName)
-		implementationClass new.
+	stereotype := (possibleStereotypes at: anStereotypeXMI xmiName) implementationClass new.
 	anElement applyStereotype: stereotype.
-	"anStereotypeXMI containedItems reject: [ :each | each name beginsWith: 'base_' ] thenDo: [:each | stereotype perform: (each xmiName , ':') asSymbol with: each value ]."
 	groups := self groupedChildrenIn: anStereotypeXMI.
-	(groups
-		associationsSelect: [ :each | (each key beginsWith: 'base_') not ])
-		keysAndValuesDo:
-			[ :key :values | self readPropertyNamed: key values: values instance: stereotype ]
+	(groups associationsSelect: [ :each | (each key beginsWith: 'base_') not ]) keysAndValuesDo: [ :key :values |
+		self readPropertyNamed: key values: values instance: stereotype ]
 ]
 
 { #category : 'reading' }
@@ -117,6 +115,15 @@ OPUMLXMIReader >> defaultClassPrefix [
 	^ 'OPUML'
 ]
 
+{ #category : 'accessing' }
+OPUMLXMIReader >> defaultProfileFactories [
+
+	^ self class environment
+		  at: #OPUmlCustomProfile
+		  ifPresent: [ :profileFactoryClass | profileFactoryClass allSubclasses ]
+		  ifAbsent: [ #(  ) ]
+]
+
 { #category : 'reading' }
 OPUMLXMIReader >> groupedChildrenIn: anObjectElement [
 	^ ((anObjectElement containedItems
@@ -136,6 +143,18 @@ OPUMLXMIReader >> instanceFor: anObjectElement property: aProperty [
 	^ instanceCache
 		at: (self uniqueIdOf: anObjectElement)
 		ifAbsentPut: [ self createNewInstanceFor: anObjectElement property: aProperty ]
+]
+
+{ #category : 'accessing' }
+OPUMLXMIReader >> profileFactories [
+
+	^ profileFactories ifNil: [ profileFactories := self defaultProfileFactories ]
+]
+
+{ #category : 'accessing' }
+OPUMLXMIReader >> profileFactories: aCollection [
+
+	profileFactories := aCollection
 ]
 
 { #category : 'reading' }
@@ -187,18 +206,14 @@ OPUMLXMIReader >> readMofItem: anItem property: aProperty [
 
 { #category : 'reading' }
 OPUMLXMIReader >> readProfileItem: anItem property: aProperty [
+
 	| uri factory |
 	uri := (anItem href splitOn: '#') first.
-	self class environment
-		at: #OPUmlCustomProfile
-		ifPresent: [ :cls | 
-			factory := cls allSubclasses
-				detect: [ :each | 
-					(each respondsTo: #matchesURI:)
-						ifTrue: [ each matchesURI: uri ]
-						ifFalse: [ each profile URI = uri ] ]
-				ifNone: [ self error: 'No profile with URI ' , uri , ' found' ] ]
-		ifAbsent: [  ].
+	factory := self profileFactories detect: [ :each | each matchesURI: uri ] ifNone: [
+			           self error: (String streamContents: [ :stream |
+						            stream << 'No profile with URI '.
+						            stream << uri.
+						            stream << ' found' ]) ].
 	^ factory profile
 ]
 
@@ -235,46 +250,40 @@ OPUMLXMIReader >> readPropertyNamed: aKey values: values instance: anInstance [
 
 { #category : 'reading' }
 OPUMLXMIReader >> readXmi: anXmi [
+
 	| elements models |
-	(anXmi isObjectElement
-		and: [ #(Model Package Profile) includes: anXmi xmiName ])
-		ifTrue: [ ^ self readItem: anXmi property: nil ].
-	elements := anXmi containedItems
-		select: [ :each | each isObjectElement ].
+	(anXmi isObjectElement and: [ #( Model Package Profile ) includes: anXmi xmiName ]) ifTrue: [
+		^ { (self readItem: anXmi property: nil) } ].
+	elements := anXmi containedItems select: [ :each | each isObjectElement ].
 	models := elements
-		select: [ :each | #(Model Package Profile) includes: each xmiName ]
-		thenCollect: [ :each | self readItem: each property: nil ].
+		          select: [ :each | #( Model Package Profile ) includes: each xmiName ]
+		          thenCollect: [ :each | self readItem: each property: nil ].
 	self applyStereotypesAmongst: elements to: models.
 	^ models
 ]
 
 { #category : 'reading' }
 OPUMLXMIReader >> uniqueIdOf: anObject [
-	anObject xmiName = 'packageImport'
-		ifTrue: [ ^ anObject xmiId , '-'
-				, (anObject containedItems detect: [ :each | each xmiName = #importedPackage ]) referencedElement xmiId ].
+
+	anObject xmiName = 'packageImport' ifTrue: [
+			^ String streamContents: [ :stream |
+					  stream << anObject xmiId.
+					  stream << '-'.
+					  stream << (anObject containedItems detect: [ :each | each xmiName = #importedPackage ]) referencedElement xmiId ] ].
 	^ anObject xmiId
 ]
 
 { #category : 'reading' }
 OPUMLXMIReader >> valueFor: anObject property: aProperty [
-	(#('Integer') includes: aProperty type name)
-		ifTrue: [ ^ Number readFromString: anObject ].
-	aProperty type name = 'UnlimitedNatural'
-		ifTrue: [ anObject = '*'
-				ifTrue: [ ^ anObject ].
+
+	(#( 'Integer' ) includes: aProperty type name) ifTrue: [ ^ Number readFromString: anObject ].
+	aProperty type name = 'UnlimitedNatural' ifTrue: [
+			anObject = '*' ifTrue: [ ^ anObject ].
 			^ Number readFromString: anObject ].
-	aProperty type name = 'String'
-		ifTrue: [ ^ anObject asString ].
-	aProperty type name = 'Boolean'
-		ifTrue: [ self
-				assert: [ #('true' 'false') includes: anObject ]
-				description: 'Unexpected type'.
+	aProperty type name = 'String' ifTrue: [ ^ anObject asString ].
+	aProperty type name = 'Boolean' ifTrue: [
+			self assert: [ #( 'true' 'false' ) includes: anObject ] description: 'Unexpected type'.
 			^ anObject = 'true' ].
-	(aProperty type oclIsKindOf: #Enumeration)
-		ifTrue: [ ^ anObject asSymbol ].
-	self error: 'Guessed type.'.
-	(NumberParser isNumber: anObject)
-		ifTrue: [ ^ Number readFromString: anObject ].
-	^ anObject
+	(aProperty type oclIsKindOf: #Enumeration) ifTrue: [ ^ anObject asSymbol ].
+	self error: 'Guessed type.'
 ]

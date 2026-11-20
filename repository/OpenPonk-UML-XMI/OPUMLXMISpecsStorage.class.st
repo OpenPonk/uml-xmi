@@ -4,9 +4,6 @@ I provide local caching and retrieval of standard OMG UML specifications and pri
 Class {
 	#name : 'OPUMLXMISpecsStorage',
 	#superclass : 'Object',
-	#instVars : [
-		'storage'
-	],
 	#classVars : [
 		'Current',
 		'MetaClassMap',
@@ -133,18 +130,19 @@ OPUMLXMISpecsStorage class >> umlMetamodel [
 
 { #category : 'accessing' }
 OPUMLXMISpecsStorage >> at: aUrl [
+
 	| relativePath localDir localFile content |
 	relativePath := self relativePathForUrl: aUrl.
-	
+
 	localDir := self specsLocalDirectory.
 	localDir ifNotNil: [
-		localFile := localDir resolve: relativePath.
-		localFile exists ifTrue: [ ^ localFile contents ] ].
+			localFile := localDir resolve: relativePath.
+			localFile exists ifTrue: [ ^ localFile contents ] ].
 
 	content := self retrieveSpecsFor: aUrl.
 	[ self cacheLocally: content forRelativePath: relativePath ]
 		on: Error
-		do: [ :ex | "Zápis do cache selhal (např. read-only fs), pokračovat s obsahem" ].
+		do: [ :ex | "Local cache write failed (e.g. read-only filesystem); continue with retrieved content" ].
 	^ content
 ]
 
@@ -155,28 +153,27 @@ OPUMLXMISpecsStorage >> baseUrl [
 
 { #category : 'private' }
 OPUMLXMISpecsStorage >> cacheLocally: aString forRelativePath: aRelativePath [
+
 	| targetFile |
-	targetFile := (FileLocator imageDirectory / 'specs') resolve: aRelativePath.
+	targetFile := self specsDirectory resolve: aRelativePath.
 	targetFile parent ensureCreateDirectory.
 	targetFile ensureDelete.
 	targetFile writeStreamDo: [ :stream | stream nextPutAll: aString ]
 ]
 
-{ #category : 'initialization' }
-OPUMLXMISpecsStorage >> initialize [
-	super initialize.
-	storage := Dictionary new
-]
-
 { #category : 'private' }
 OPUMLXMISpecsStorage >> relativePathForUrl: aUrl [
+
 	| segments |
 	segments := aUrl asZnUrl segments.
-	(segments beginsWithAnyOf: #( #( spec UML ) #( spec DD ) )) ifFalse: [ 
-		self error: 'Urls like ' , aUrl asString , ' are not handled yet.' ].
-	^ (segments second = 'UML')
-		ifTrue: [ 'UML/20131001/' , segments last ]
-		ifFalse: [ 'DD/20131001/' , segments last ]
+	(segments beginsWithAnyOf: #( #( spec UML ) #( spec DD ) )) ifFalse: [
+			self error: (String streamContents: [ :stream |
+						 stream << 'Urls like '.
+						 stream << aUrl asString.
+						 stream << ' are not handled yet.' ]) ].
+	^ segments second = 'UML'
+		  ifTrue: [ 'UML/20131001/' , segments last ]
+		  ifFalse: [ 'DD/20131001/' , segments last ]
 ]
 
 { #category : 'retrieving' }
@@ -197,10 +194,16 @@ OPUMLXMISpecsStorage >> retrieveSpecsFor: aUrl [
 ]
 
 { #category : 'accessing' }
+OPUMLXMISpecsStorage >> specsDirectory [
+
+	^ FileLocator imageDirectory / 'specs'
+]
+
+{ #category : 'accessing' }
 OPUMLXMISpecsStorage >> specsLocalDirectory [
+
 	| dir |
-	dir := FileLocator imageDirectory / 'specs'.
-	^ (dir exists and: [ dir isDirectory ])
-		ifTrue: [ dir ]
-		ifFalse: [ nil ]
+	dir := self specsDirectory.
+	(dir exists and: [ dir isDirectory ]) ifTrue: [ ^ dir ].
+	^ nil
 ]

@@ -67,14 +67,6 @@ OPUMLXMIReaderTest >> attributeWithPrimitiveType [
 ]
 
 { #category : 'instance creation' }
-OPUMLXMIReaderTest >> defaultValueElement [
-	^ OPXMIObjectElement new
-		containedItems:
-			{OPXMIValueAttribute xmiName: 'xmi:type' value: 'uml:LiteralInteger'.
-			OPXMIValueAttribute xmiName: 'xmi:id' value: 'lowerValue'}
-]
-
-{ #category : 'instance creation' }
 OPUMLXMIReaderTest >> elementWithGeneralization [
 	"Comment -> Element"
 
@@ -238,6 +230,90 @@ OPUMLXMIReaderTest >> testAmbiguousPackageImport [
 ]
 
 { #category : 'tests' }
+OPUMLXMIReaderTest >> testApplyStereotypesAmongstElementsAndReadTaggedValue [
+
+	| profile stereotypeDefinition extension baseProperty extensionProperty package classElement targetClass stereotypeElement applied |
+	profile := OPUMLProfile new
+		           name: 'TestProfile';
+		           uuid: 'prof-1';
+		           URI: 'http://www.example.com/TestProfile'.
+	stereotypeDefinition := OPUMLTestStereotypeDefinition new
+		                        name: 'TestStereotype';
+		                        uuid: 'TestStereotype';
+		                        profile: profile;
+		                        implementationClass: OPUMLTestStereotype;
+		                        yourself.
+	extension := OPUMLExtension new
+		             name: 'Class_TestStereotype';
+		             uuid: 'Class_TestStereotype'.
+	baseProperty := OPUMLProperty new
+		                name: 'base_Class';
+		                uuid: 'TestStereotype-base_Class';
+		                owningClass: stereotypeDefinition;
+		                type: (self metaClassNamed: #Class);
+		                yourself.
+	extensionProperty := OPUMLProperty new
+		                     name: 'extension_TestStereotype';
+		                     uuid: 'Class_TestStereotype-extension_TestStereotype';
+		                     owningAssociation: extension;
+		                     aggregation: OPUMLAggregationKind composite;
+		                     type: stereotypeDefinition;
+		                     yourself.
+	extension memberEnds: {
+			baseProperty.
+			extensionProperty }.
+	extension ownedEnd: extensionProperty.
+	OPUMLProperty new
+		name: 'reviewed';
+		uuid: 'TestStereotype-reviewed';
+		owningClass: stereotypeDefinition;
+		type: (self primitiveTypeNamed: #Boolean).
+	profile packagedElements
+		add: stereotypeDefinition;
+		add: extension.
+	package := OPUMLPackage new
+		           name: 'Root';
+		           uuid: 'pkg-1'.
+	package profileApplications add: (OPUMLProfileApplication new
+			 uuid: 'pa-1';
+			 appliedProfile: profile).
+
+	OPUMLTestStereotype defaultUmlMetaClass: stereotypeDefinition.
+	[
+		classElement := OPXMIObjectElement new
+			                xmiName: 'packagedElement';
+			                containedItems: {
+					                (OPXMIValueAttribute xmiName: 'xmi:type' value: 'uml:Class').
+					                (OPXMIValueAttribute xmiName: 'xmi:id' value: 'cls-1').
+					                (OPXMIValueAttribute xmiName: 'name' value: 'Person') }.
+		reader classPrefix: 'OPUMLTest'.
+		targetClass := reader instanceFor: classElement property: packagedElementProperty.
+		reader classPrefix: 'OPUML'.
+		self assert: targetClass class identicalTo: OPUMLTestClass.
+		stereotypeElement := OPXMIObjectElement new
+			                     xmiName: 'TestStereotype';
+			                     containedItems: {
+					                     (OPXMIValueAttribute xmiName: 'xmi:id' value: 'st-1').
+					                     (OPXMIReferenceAttribute xmiName: 'base_Class' referencedElements: { classElement }).
+					                     (OPXMIValueAttribute xmiName: 'reviewed' value: 'true') }.
+		reader applyStereotypesAmongst: { stereotypeElement } to: { package }.
+		self assert: targetClass appliedStereotypes size equals: 1.
+		applied := targetClass appliedStereotypes first.
+		self assert: applied class identicalTo: OPUMLTestStereotype.
+		self assert: targetClass extension_TestStereotype identicalTo: applied.
+		self assert: applied reviewed description: 'Boolean tagged value reviewed must be read as true' ] ensure: [
+		OPUMLTestStereotype defaultUmlMetaClass: nil ]
+]
+
+{ #category : 'tests' }
+OPUMLXMIReaderTest >> testAsPlural [
+
+	self assert: (reader asPlural: 'class') equals: 'classes'.
+	self assert: (reader asPlural: 'property') equals: 'properties'.
+	self assert: (reader asPlural: 'element') equals: 'elements'
+]
+
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testAssociation [
 
 	| result |
@@ -246,6 +322,15 @@ OPUMLXMIReaderTest >> testAssociation [
 	self assertCollection: (result memberEnds collect: #name as: Array) hasSameElements: #( 'annotatedElement' 'comment' ).
 	self assert: (result ownedEnds collect: #name as: Array) equals: #( 'comment' ).
 	self assertCollection: result memberEnds includesAll: { result ownedEnds first }
+]
+
+{ #category : 'tests - reading - value' }
+OPUMLXMIReaderTest >> testBooleanInvalidValueRaisesAssertionFailure [
+
+	| booleanProperty |
+	booleanProperty := (OPUMLXMISpecsStorage metaClassFor: OPUMLProperty new) ownedAttributes detect: [ :each |
+		                   each name = 'isDerived' ].
+	self should: [ reader valueFor: 'maybe' property: booleanProperty ] raise: AssertionFailure
 ]
 
 { #category : 'tests - reading - value' }
@@ -265,6 +350,13 @@ OPUMLXMIReaderTest >> testBooleanValue [
 		                   each name = 'isDerived' ].
 	result := reader valueFor: 'true' property: booleanProperty.
 	self assert: result description: 'Boolean property value ''true'' must evaluate to true'
+]
+
+{ #category : 'tests' }
+OPUMLXMIReaderTest >> testClassPrefix [
+
+	reader classPrefix: 'CustomPrefix'.
+	self assert: reader classPrefix equals: 'CustomPrefix'
 ]
 
 { #category : 'tests' }
@@ -311,6 +403,24 @@ OPUMLXMIReaderTest >> testCreateNewInstanceXmiType [
 	self
 		assert: (reader createNewInstanceFor: item property: packagedElementProperty) umlClassName
 		equals: #Class
+]
+
+{ #category : 'tests' }
+OPUMLXMIReaderTest >> testDefaultProfileFactoriesReturnsCollection [
+
+	self
+		assert: reader defaultProfileFactories isCollection
+		description: 'Default profile factories must be returned as a collection'
+]
+
+{ #category : 'tests - reading - value' }
+OPUMLXMIReaderTest >> testEnumerationValue [
+
+	| visibilityProperty result |
+	visibilityProperty := (OPUMLXMISpecsStorage metaClassFor: OPUMLNamedElement new) allAttributes detect: [ :each |
+		                      each name = 'visibility' ].
+	result := reader valueFor: 'private' property: visibilityProperty.
+	self assert: result identicalTo: #private
 ]
 
 { #category : 'tests' }
@@ -394,12 +504,50 @@ OPUMLXMIReaderTest >> testReadBoolean [
 ]
 
 { #category : 'tests' }
+OPUMLXMIReaderTest >> testReadFromBareRootPackage [
+
+	| xmlString result |
+	xmlString := '<uml:Package xmlns:uml="http://www.omg.org/spec/UML/20131001" xmlns:xmi="http://www.omg.org/spec/XMI/20131001" xmi:type="uml:Package" xmi:id="pkg-1" name="RootPackage"/>'.
+	result := OPUMLXMIReader readFrom: xmlString readStream.
+	self assert: result umlClassName equals: #Package.
+	self assert: result name equals: 'RootPackage'
+]
+
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testReadImportedType [
 
 	| result property |
 	property := (self metaClassNamed: #Class) allAttributes detect: [ :each | each name = 'ownedAttribute' ].
 	result := reader readItem: self attributeWithHrefType property: property.
 	self assert: result type identicalTo: (self metaClassNamed: #Association)
+]
+
+{ #category : 'tests' }
+OPUMLXMIReaderTest >> testReadMetamodelItemUnknownUriRaisesError [
+
+	| referenceItem property |
+	referenceItem := OPXMIReferenceElement new
+		                 xmiName: 'type';
+		                 href: 'http://www.omg.org/spec/UML/20131001/Unknown.xmi#Foo';
+		                 yourself.
+	property := (self metaClassNamed: #Property) allAttributes detect: [ :each | each name = 'type' ].
+	self
+		should: [ reader readItem: referenceItem property: property ]
+		raise: Error
+		withExceptionDo: [ :error |
+		self assert: error messageText equals: 'Unknown type at http://www.omg.org/spec/UML/20131001/Unknown.xmi#Foo' ]
+]
+
+{ #category : 'tests' }
+OPUMLXMIReaderTest >> testReadMofPrimitiveType [
+
+	| item property result |
+	item := OPXMIReader readFrom: '<ownedAttribute xmi:type="uml:Property" xmi:id="attr-1" name="title">
+	<type xmi:type="uml:PrimitiveType" href="http://schema.omg.org/spec/MOF/20131001/PrimitiveTypes.xmi#String" />
+</ownedAttribute>'.
+	property := (self metaClassNamed: #Class) allAttributes detect: [ :each | each name = 'ownedAttribute' ].
+	result := reader readItem: item property: property.
+	self assert: result type identicalTo: (self primitiveTypeNamed: #String)
 ]
 
 { #category : 'tests' }
@@ -441,6 +589,46 @@ OPUMLXMIReaderTest >> testReadPrimitiveType [
 ]
 
 { #category : 'tests' }
+OPUMLXMIReaderTest >> testReadProfileItemNotFoundWhenNoProfileFactories [
+
+	| referenceItem property |
+	reader profileFactories: #(  ).
+	property := (OPUMLXMISpecsStorage metaClassFor: OPUMLProfileApplication new) allAttributes detect: [ :each |
+		            each name = 'appliedProfile' ].
+	referenceItem := OPXMIReferenceElement new
+		                 xmiName: 'appliedProfile';
+		                 href: 'http://www.example.com/MissingProfile#_0';
+		                 yourself.
+	self
+		should: [ reader readItem: referenceItem property: property ]
+		raise: Error
+		withExceptionDo: [ :error |
+		self assert: error messageText equals: 'No profile with URI http://www.example.com/MissingProfile found' ]
+]
+
+{ #category : 'tests' }
+OPUMLXMIReaderTest >> testReadProfileItemWithConfiguredProfileFactory [
+
+	| profile factory referenceItem property result |
+	profile := OPUMLProfile new
+		           name: 'CustomProfile';
+		           URI: 'http://www.example.com/CustomProfile'.
+	factory := OPUMLTestProfileFactory new
+		           profile: profile;
+		           matchedURIs: #( 'http://www.example.com/LegacyCustomProfile' );
+		           yourself.
+	reader profileFactories: { factory }.
+	property := (OPUMLXMISpecsStorage metaClassFor: OPUMLProfileApplication new) allAttributes detect: [ :each |
+		            each name = 'appliedProfile' ].
+	referenceItem := OPXMIReferenceElement new
+		                 xmiName: 'appliedProfile';
+		                 href: 'http://www.example.com/LegacyCustomProfile#_0';
+		                 yourself.
+	result := reader readItem: referenceItem property: property.
+	self assert: result identicalTo: profile
+]
+
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testReadSimpleObject [
 	| element result |
 	element := OPXMIObjectElement new
@@ -471,6 +659,51 @@ OPUMLXMIReaderTest >> testReadTrivialishXmi [
 ]
 
 { #category : 'tests' }
+OPUMLXMIReaderTest >> testReadWithCustomPathmap [
+
+	| pathmap xmlString result |
+	pathmap := OPUMLXMIPathmap new.
+	pathmap
+		add: 'http://www.example.com/External.xmi'
+		retrieveUsing: [ '<xmi:XMI xmlns:uml="http://www.omg.org/spec/UML/20131001" xmlns:xmi="http://www.omg.org/spec/XMI/20131001"/>' ].
+	xmlString := '<?xml version="1.0" encoding="UTF-8"?>
+<xmi:XMI xmlns:uml="http://www.omg.org/spec/UML/20131001" xmlns:xmi="http://www.omg.org/spec/XMI/20131001">
+	<uml:Package xmi:type="uml:Package" xmi:id="pkg-1" name="MappedPackage"/>
+</xmi:XMI>'.
+	result := OPUMLXMIReader read: xmlString readStream pathmap: pathmap.
+	self assert: result umlClassName equals: #Package.
+	self assert: result name equals: 'MappedPackage'
+]
+
+{ #category : 'tests' }
+OPUMLXMIReaderTest >> testReadWithDefaultPathmap [
+
+	| xmlString result |
+	xmlString := '<?xml version="1.0" encoding="UTF-8"?>
+<xmi:XMI xmlns:uml="http://www.omg.org/spec/UML/20131001" xmlns:xmi="http://www.omg.org/spec/XMI/20131001">
+	<uml:Package xmi:type="uml:Package" xmi:id="pkg-default" name="DefaultPathmapPackage"/>
+</xmi:XMI>'.
+	result := OPUMLXMIReader read: xmlString readStream.
+	self assert: result umlClassName equals: #Package.
+	self assert: result name equals: 'DefaultPathmapPackage'
+]
+
+{ #category : 'tests' }
+OPUMLXMIReaderTest >> testReadXmiBareRootPackageReturnsCollection [
+
+	| packageElement result |
+	packageElement := OPXMIObjectElement new
+		                  xmiName: 'Package';
+		                  containedItems: {
+				                  (OPXMIValueAttribute xmiName: 'xmi:id' value: 'pkg-1').
+				                  (OPXMIValueAttribute xmiName: 'name' value: 'DirectPackage') }.
+	result := reader readXmi: packageElement.
+	self assert: result size equals: 1.
+	self assert: result first umlClassName equals: #Package.
+	self assert: result first name equals: 'DirectPackage'
+]
+
+{ #category : 'tests' }
 OPUMLXMIReaderTest >> testReferenceElement [
 	| result gen |
 	result := reader
@@ -495,6 +728,30 @@ OPUMLXMIReaderTest >> testUniqueId [
 			OPXMIReferenceAttribute xmiName: 'importedPackage' referencedElements: {regular}}.
 	self assert: (reader uniqueIdOf: regular) equals: 'AAA'.
 	self assert: (reader uniqueIdOf: packageImport) equals: '_packageImport.1-AAA'
+]
+
+{ #category : 'tests - reading - value' }
+OPUMLXMIReaderTest >> testUnknownValueTypeRaisesError [
+
+	| customProperty |
+	customProperty := OPUMLProperty new
+		                  name: 'custom';
+		                  type: (OPUMLClass new name: 'CustomType');
+		                  yourself.
+	self
+		should: [ reader valueFor: 'abc' property: customProperty ]
+		raise: Error
+		withExceptionDo: [ :error | self assert: error messageText equals: 'Guessed type.' ]
+]
+
+{ #category : 'tests - reading - value' }
+OPUMLXMIReaderTest >> testUnlimitedNaturalNumericValue [
+
+	| upperProperty result |
+	upperProperty := (OPUMLXMISpecsStorage metaClassFor: OPUMLLiteralUnlimitedNatural new) allAttributes detect: [ :each |
+		                 each name = 'value' ].
+	result := reader valueFor: '5' property: upperProperty.
+	self assert: result equals: 5
 ]
 
 { #category : 'instance creation' }
